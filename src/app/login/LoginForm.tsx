@@ -4,17 +4,17 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { Wrench, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Sparkles, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import InstallButton from '@/components/pwa/InstallButton';
 
 interface LoginFormProps {
-  workshopName?: string;
+  companyName?: string;
   logoUrl?: string | null;
 }
 
-export default function LoginForm({ workshopName, logoUrl }: LoginFormProps = {}) {
+export default function LoginForm({ companyName, logoUrl }: LoginFormProps = {}) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -40,19 +40,7 @@ export default function LoginForm({ workshopName, logoUrl }: LoginFormProps = {}
       return;
     }
 
-    // Dar ~400ms para que la petición del Pixel (facebook.com/tr) alcance a
-    // enviarse antes de cambiar de página; si no, el navegador la cancela.
-    await new Promise((r) => setTimeout(r, 400));
-
-    // ¿Es superadmin de plataforma? No tiene perfil de taller; se verifica con
-    // un endpoint seguro (platform_admins está bloqueada por RLS al navegador).
-    const saRes = await fetch('/api/superadmin/me');
-    if (saRes.ok) {
-      router.replace('/superadmin');
-      return;
-    }
-
-    // Si no, redirigir según el rol dentro del taller.
+    // Redirigir según el rol.
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
@@ -62,7 +50,7 @@ export default function LoginForm({ workshopName, logoUrl }: LoginFormProps = {}
     if (profile?.role === 'admin') {
       router.replace('/admin');
     } else {
-      router.replace('/mecanico');
+      router.replace('/estratega');
     }
   }
 
@@ -102,19 +90,19 @@ export default function LoginForm({ workshopName, logoUrl }: LoginFormProps = {}
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={logoUrl}
-              alt={workshopName || 'Logo'}
+              alt={companyName || 'Logo'}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           ) : (
-            <Wrench size={36} color="#0D0F1A" strokeWidth={2.5} />
+            <Sparkles size={36} color="#0D0F1A" strokeWidth={2.5} />
           )}
         </div>
         <div style={{ textAlign: 'center' }}>
           <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.02em' }}>
-            {workshopName || 'Formula Taller'}
+            {companyName || 'Hekko'}
           </h1>
           <p style={{ color: 'var(--color-text-secondary)', marginTop: 4, fontSize: 14 }}>
-            Sistema de gestión de taller
+            Seguimiento de proyectos
           </p>
         </div>
       </div>
@@ -212,31 +200,12 @@ export default function LoginForm({ workshopName, logoUrl }: LoginFormProps = {}
             Entrar
           </Button>
         </form>
-
-        <div
-          style={{
-            marginTop: 20,
-            paddingTop: 18,
-            borderTop: '1px solid var(--color-border)',
-            textAlign: 'center',
-            fontSize: 13,
-            color: 'var(--color-text-secondary)',
-          }}
-        >
-          ¿No tienes taller registrado?{' '}
-          <Link
-            href="/registro"
-            style={{ color: 'var(--color-brand-400)', fontWeight: 700, textDecoration: 'none' }}
-          >
-            Crear taller
-          </Link>
-        </div>
       </div>
 
       <InstallButton />
 
       <p style={{ marginTop: 20, color: 'var(--color-text-muted)', fontSize: 12, textAlign: 'center' }}>
-        Formula Taller © {new Date().getFullYear()}
+        Hekko © {new Date().getFullYear()}
         <br />
         <Link href="/terminos" style={{ color: 'var(--color-text-muted)' }}>Términos</Link>
         {' · '}

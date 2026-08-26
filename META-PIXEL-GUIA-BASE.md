@@ -1,5 +1,12 @@
 # 🧭 Guía base: Meta Pixel + eventos de conversión + Pixel Helper
 
+> ⚠️ **El Meta Pixel ya NO está instalado en Hekko.** Se eliminó al reconvertir el
+> proyecto (pertenecía a la cuenta anterior, Formula Taller). Esta guía se conserva
+> como **material reutilizable para otros proyectos**: las secciones 1–7 son
+> genéricas y siguen siendo válidas, pero el **mapa de archivos del final** describe
+> el código de Formula Taller, que ya no existe en este repo (sigue disponible en el
+> historial de git).
+
 Esta guía resume **todo lo aprendido implementando el Pixel de Meta en este proyecto**
 (incluyendo los errores y falsas alarmas que costó tiempo diagnosticar), para poder
 **replicar la misma lógica en un proyecto nuevo sin repetir la investigación desde cero**.

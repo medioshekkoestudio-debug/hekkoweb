@@ -1,49 +1,35 @@
 // ============================================================================
-// TypeScript types derived from the Supabase schema.
-// Keep in sync with supabase/migrations/0001_init.sql
+// Tipos TypeScript derivados del esquema de Supabase.
+// Mantener en sincronía con supabase/migrations/0001_hekko_init.sql
 // ============================================================================
 
-export type UserRole = 'admin' | 'mechanic';
-export type OrderStatus = 'sin_mecanico' | 'con_mecanico' | 'lista';
+export type UserRole = 'admin' | 'strategist';
+export type OrderStatus = 'sin_estratega' | 'con_estratega' | 'entregada';
 export type StageStatus = 'pending' | 'in_progress' | 'done';
+export type ServiceType = 'diseno_grafico' | 'marketing' | 'desarrollo_web';
 
-export interface Workshop {
-  id: string;
+/** Etiquetas de los servicios de Hekko, para mostrar en la interfaz. */
+export const SERVICE_LABELS: Record<ServiceType, string> = {
+  diseno_grafico: 'Diseño gráfico',
+  marketing: 'Marketing',
+  desarrollo_web: 'Desarrollo web',
+};
+
+export const SERVICE_TYPES = Object.keys(SERVICE_LABELS) as ServiceType[];
+
+/** Marca de Hekko: fila única (id = 1) de company_settings. */
+export interface CompanySettings {
+  id: number;
   name: string;
-  slug: string;
-  whatsapp: string | null;
   logo_url: string | null;
-  // Override del límite gratuito para este taller; null = usar el global.
-  order_limit: number | null;
-  is_subscribed: boolean;
-  // Taller de prueba (QA/demo): se excluye del conteo total en el panel de superadmin.
-  is_test: boolean;
-  owner_id: string | null;
-  created_at: string;
+  whatsapp: string | null;
   updated_at: string;
 }
 
-// Fila del panel de superadmin: taller + métricas derivadas.
-export interface WorkshopAdminRow {
-  id: string;
-  name: string;
-  slug: string;
-  created_at: string;
-  is_subscribed: boolean;
-  is_test: boolean;
-  // Override por taller (null = usa el límite global del plan gratuito).
-  order_limit: number | null;
-  owner_name: string | null;
-  owner_email: string | null;
-  whatsapp: string | null;
-  order_count: number;
-}
-
-export type WorkshopUpdate = Partial<Pick<Workshop, 'name' | 'whatsapp'>>;
+export type CompanyUpdate = Partial<Pick<CompanySettings, 'name' | 'whatsapp'>>;
 
 export interface Profile {
   id: string;
-  workshop_id: string;
   full_name: string;
   role: UserRole;
   phone: string | null;
@@ -55,34 +41,89 @@ export interface Profile {
 export type ProfileInsert = Omit<Profile, 'created_at' | 'updated_at'>;
 export type ProfileUpdate = Partial<Omit<Profile, 'id' | 'created_at' | 'updated_at'>>;
 
-// A mechanic profile enriched with the auth email (email lives in auth.users,
-// not in the profiles table).
-export interface Mechanic extends Profile {
+// Perfil de estratega enriquecido con el correo de auth (el email vive en
+// auth.users, no en la tabla profiles).
+export interface Strategist extends Profile {
   email: string | null;
+}
+
+/** Alta de un estratega desde el panel del admin. */
+export interface CreateStrategistPayload {
+  full_name: string;
+  email: string;
+  password: string;
+  phone?: string | null;
+}
+
+/** Edición de un estratega. Todos los campos son opcionales. */
+export interface UpdateStrategistPayload {
+  full_name?: string;
+  phone?: string | null;
+  active?: boolean;
+  email?: string;
+  password?: string;
 }
 
 export interface Order {
   id: string;
-  workshop_id: string;
   public_token: string;
   client_first_name: string;
   client_last_name: string;
   client_whatsapp: string;
-  car_model: string;
-  assigned_mechanic_id: string | null;
+  service_type: ServiceType;
+  project_name: string;
+  assigned_strategist_id: string | null;
   status: OrderStatus;
   notes: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
   // joined
-  assigned_mechanic?: Profile | null;
+  assigned_strategist?: Profile | null;
   stages?: OrderStage[];
-  workshop?: { name: string; logo_url?: string | null } | null;
 }
 
-export type OrderInsert = Omit<Order, 'id' | 'public_token' | 'created_at' | 'updated_at' | 'assigned_mechanic' | 'stages' | 'workshop'>;
-export type OrderUpdate = Partial<Omit<Order, 'id' | 'public_token' | 'created_at' | 'updated_at' | 'assigned_mechanic' | 'stages' | 'workshop'>>;
+export type OrderInsert = Omit<
+  Order,
+  'id' | 'public_token' | 'created_at' | 'updated_at' | 'assigned_strategist' | 'stages'
+>;
+export type OrderUpdate = Partial<OrderInsert>;
+
+/** Cuerpo que manda el formulario de creación de orden. */
+export interface CreateOrderPayload {
+  client_first_name: string;
+  client_last_name: string;
+  client_whatsapp: string;
+  service_type: ServiceType;
+  project_name: string;
+  assigned_strategist_id?: string | null;
+  notes?: string | null;
+}
+
+/** Edición de una orden desde el panel. */
+export interface UpdateOrderPayload {
+  client_first_name?: string;
+  client_last_name?: string;
+  client_whatsapp?: string;
+  service_type?: ServiceType;
+  project_name?: string;
+  assigned_strategist_id?: string | null;
+  status?: OrderStatus;
+  notes?: string | null;
+}
+
+/** Alta de una etapa de seguimiento. */
+export interface CreateStagePayload {
+  name: string;
+  position?: number;
+}
+
+/** Edición de una etapa de seguimiento. */
+export interface UpdateStagePayload {
+  status?: StageStatus;
+  name?: string;
+  description?: string | null;
+}
 
 export interface StageAttachment {
   id: string;
@@ -113,111 +154,42 @@ export type OrderStageInsert = Omit<OrderStage, 'id' | 'created_at'>;
 export type OrderStageUpdate = Partial<Omit<OrderStage, 'id' | 'order_id' | 'created_at'>>;
 
 // ============================================================================
-// Supabase Database type (used by createClient / createServerClient)
+// Tipo Database (lo usan createClient / createServerClient)
 // ============================================================================
 export type Database = {
   public: {
     Tables: {
-      workshops: {
-        Row: Workshop;
-        Insert: Omit<Workshop, 'id' | 'created_at' | 'updated_at'>;
-        Update: WorkshopUpdate;
-        Relationships: [];
+      company_settings: {
+        Row: CompanySettings;
+        Insert: Partial<CompanySettings>;
+        Update: Partial<CompanySettings>;
       };
       profiles: {
         Row: Profile;
         Insert: ProfileInsert;
         Update: ProfileUpdate;
-        Relationships: [];
       };
       orders: {
         Row: Order;
         Insert: OrderInsert;
         Update: OrderUpdate;
-        Relationships: [];
       };
       order_stages: {
         Row: OrderStage;
         Insert: OrderStageInsert;
         Update: OrderStageUpdate;
-        Relationships: [];
       };
       stage_attachments: {
         Row: StageAttachment;
         Insert: Omit<StageAttachment, 'id' | 'created_at'>;
         Update: Partial<Omit<StageAttachment, 'id' | 'created_at'>>;
-        Relationships: [];
       };
-    };
-    Views: Record<string, never>;
-    Functions: {
-      is_staff: { Args: Record<never, never>; Returns: boolean };
-      is_admin: { Args: Record<never, never>; Returns: boolean };
     };
     Enums: {
       user_role: UserRole;
       order_status: OrderStatus;
       stage_status: StageStatus;
+      service_type: ServiceType;
     };
-    CompositeTypes: Record<string, never>;
   };
 };
-
-// ============================================================================
-// API payload types
-// ============================================================================
-
-export interface CreateOrderPayload {
-  client_first_name: string;
-  client_last_name: string;
-  client_whatsapp: string;
-  car_model: string;
-  assigned_mechanic_id?: string | null;
-  notes?: string | null;
-}
-
-export interface UpdateOrderPayload {
-  client_first_name?: string;
-  client_last_name?: string;
-  client_whatsapp?: string;
-  car_model?: string;
-  assigned_mechanic_id?: string | null;
-  status?: OrderStatus;
-  notes?: string | null;
-}
-
-export interface RegisterWorkshopPayload {
-  workshop_name: string;
-  email: string;
-  whatsapp: string;
-  first_name: string;
-  last_name: string;
-  password: string;
-  password_confirm: string;
-}
-
-export interface CreateMechanicPayload {
-  full_name: string;
-  email: string;
-  password: string;
-  phone?: string;
-}
-
-export interface UpdateMechanicPayload {
-  full_name?: string;
-  phone?: string | null;
-  active?: boolean;
-  email?: string;
-  password?: string;
-}
-
-export interface UpdateStagePayload {
-  status?: StageStatus;
-  name?: string;
-  description?: string | null;
-}
-
-export interface CreateStagePayload {
-  name: string;
-  position?: number;
-}

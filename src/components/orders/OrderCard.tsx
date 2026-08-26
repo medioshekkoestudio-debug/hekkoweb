@@ -2,48 +2,49 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Order, Profile, Mechanic, OrderStatus } from '@/lib/types';
+import type { Order, Profile, Strategist, OrderStatus } from '@/lib/types';
+import { SERVICE_LABELS } from '@/lib/types';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import CopyLinkButton from '@/components/orders/CopyLinkButton';
-import MechanicSelect from '@/components/orders/MechanicSelect';
-import MechanicForm from '@/components/mechanics/MechanicForm';
+import StrategistSelect from '@/components/orders/StrategistSelect';
+import StrategistForm from '@/components/strategists/StrategistForm';
 import { formatDate, buildWhatsAppLink, buildTrackingMessage, openWhatsApp } from '@/lib/utils';
-import { Car, User, Phone, MessageCircle, Edit2, Trash2, ChevronRight, UserCheck, CheckCircle2 } from 'lucide-react';
+import { Briefcase, Tag, User, Phone, MessageCircle, Edit2, Trash2, ChevronRight, UserCheck, CheckCircle2 } from 'lucide-react';
 
 interface OrderCardProps {
   order: Order;
-  mechanics: Profile[];
-  role: 'admin' | 'mechanic';
+  strategists: Profile[];
+  role: 'admin' | 'strategist';
   currentUserId?: string;
   onDelete?: (id: string) => void;
   onStatusChange?: (id: string, status: OrderStatus) => void;
   onUpdate?: (order: Order) => void;
-  /** Solo admin: habilita "Agregar mecánico" en el selector de asignación. */
-  canCreateMechanic?: boolean;
-  /** Avisa al padre cuando se crea un mecánico (para actualizar la lista compartida). */
-  onMechanicCreated?: (m: Mechanic) => void;
-  workshopName?: string;
+  /** Solo admin: habilita "Agregar estratega" en el selector de asignación. */
+  canCreateStrategist?: boolean;
+  /** Avisa al padre cuando se crea un estratega (para actualizar la lista compartida). */
+  onStrategistCreated?: (m: Strategist) => void;
+  companyName?: string;
 }
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
 export default function OrderCard({
   order,
-  mechanics,
+  strategists,
   role,
   currentUserId,
   onDelete,
   onStatusChange,
   onUpdate,
-  canCreateMechanic = false,
-  onMechanicCreated,
-  workshopName,
+  canCreateStrategist = false,
+  onStrategistCreated,
+  companyName,
 }: OrderCardProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [showAddMechanic, setShowAddMechanic] = useState(false);
+  const [showAddStrategist, setShowAddStrategist] = useState(false);
 
   async function handleAssignSelf() {
     if (!currentUserId) return;
@@ -51,7 +52,7 @@ export default function OrderCard({
     const res = await fetch(`/api/orders/${order.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ assigned_mechanic_id: currentUserId }),
+      body: JSON.stringify({ assigned_strategist_id: currentUserId }),
     });
     setLoading(false);
     if (res.ok) {
@@ -61,15 +62,15 @@ export default function OrderCard({
   }
 
   const clientName = `${order.client_first_name} ${order.client_last_name}`;
-  // Un mecánico solo puede eliminar sus propias órdenes (asignadas a él o
+  // Un estratega solo puede eliminar sus propias órdenes (asignadas a él o
   // creadas por él). El administrador puede eliminar cualquiera.
   const isOwn =
     !!currentUserId &&
-    (order.assigned_mechanic_id === currentUserId || order.created_by === currentUserId);
+    (order.assigned_strategist_id === currentUserId || order.created_by === currentUserId);
   const trackingUrl = `${SITE_URL}/tracking/${order.public_token}`;
   const waLink = buildWhatsAppLink(
     order.client_whatsapp,
-    buildTrackingMessage(order.client_first_name, order.public_token, SITE_URL, order.workshop?.name)
+    buildTrackingMessage(order.client_first_name, order.public_token, SITE_URL, companyName)
   );
 
   async function handleDelete() {
@@ -91,31 +92,31 @@ export default function OrderCard({
     if (res.ok) onStatusChange?.(order.id, newStatus);
   }
 
-  async function handleAssignMechanic(mechanicId: string) {
-    if (!mechanicId) return;
+  async function handleAssignStrategist(strategistId: string) {
+    if (!strategistId) return;
     setLoading(true);
     const res = await fetch(`/api/orders/${order.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ assigned_mechanic_id: mechanicId }),
+      body: JSON.stringify({ assigned_strategist_id: strategistId }),
     });
     setLoading(false);
     if (res.ok) onUpdate?.(await res.json());
   }
 
-  // Mecánico creado desde la tarjeta: avisar al padre (lista compartida) y
-  // asignar esta orden al nuevo mecánico.
-  function handleMechanicCreated(m: Mechanic) {
-    onMechanicCreated?.(m);
-    handleAssignMechanic(m.id);
+  // Estratega creado desde la tarjeta: avisar al padre (lista compartida) y
+  // asignar esta orden al nuevo estratega.
+  function handleStrategistCreated(m: Strategist) {
+    onStrategistCreated?.(m);
+    handleAssignStrategist(m.id);
   }
 
-  // Transiciones de estado por botón. La asignación de mecánico (cuando la orden
+  // Transiciones de estado por botón. La asignación de estratega (cuando la orden
   // no tiene uno) se hace con un desplegable aparte, no con un botón de estado.
   const nextStatuses: Record<OrderStatus, { value: OrderStatus; label: string }[]> = {
-    sin_mecanico: [],
-    con_mecanico: [{ value: 'lista', label: 'Marcar como lista' }],
-    lista: [],
+    sin_estratega: [],
+    con_estratega: [{ value: 'entregada', label: 'Marcar como entregada' }],
+    entregada: [],
   };
 
   return (
@@ -138,12 +139,13 @@ export default function OrderCard({
 
       {/* Details */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <InfoRow icon={<Car size={14} />} text={order.car_model} />
+        <InfoRow icon={<Briefcase size={14} />} text={order.project_name} />
+        <InfoRow icon={<Tag size={14} />} text={SERVICE_LABELS[order.service_type]} />
         <InfoRow icon={<Phone size={14} />} text={order.client_whatsapp} />
-        {order.assigned_mechanic && (
+        {order.assigned_strategist && (
           <InfoRow
             icon={<User size={14} />}
-            text={order.assigned_mechanic.full_name}
+            text={order.assigned_strategist.full_name}
             color="var(--color-brand-400)"
           />
         )}
@@ -160,7 +162,7 @@ export default function OrderCard({
             e.preventDefault();
             openWhatsApp(
               order.client_whatsapp,
-              buildTrackingMessage(order.client_first_name, order.public_token, SITE_URL, order.workshop?.name)
+              buildTrackingMessage(order.client_first_name, order.public_token, SITE_URL, companyName)
             );
           }}
           style={{
@@ -189,7 +191,7 @@ export default function OrderCard({
           variant="secondary"
           size="sm"
           onClick={() => {
-            const base = role === 'admin' ? '/admin' : '/mecanico';
+            const base = role === 'admin' ? '/admin' : '/estratega';
             router.push(`${base}/ordenes/${order.id}`);
           }}
         >
@@ -197,8 +199,8 @@ export default function OrderCard({
           Ver orden
         </Button>
 
-        {/* Mechanic: self-assign */}
-        {role === 'mechanic' && order.assigned_mechanic_id !== currentUserId && (
+        {/* Strategist: self-assign */}
+        {role === 'strategist' && order.assigned_strategist_id !== currentUserId && (
           <Button
             variant="secondary"
             size="sm"
@@ -210,42 +212,42 @@ export default function OrderCard({
           </Button>
         )}
 
-        {/* Mechanic: mark as ready when working on it */}
-        {role === 'mechanic' &&
-          order.assigned_mechanic_id === currentUserId &&
-          order.status === 'con_mecanico' && (
+        {/* Strategist: mark as ready when working on it */}
+        {role === 'strategist' &&
+          order.assigned_strategist_id === currentUserId &&
+          order.status === 'con_estratega' && (
             <Button
               variant="primary"
               size="sm"
               loading={loading}
-              onClick={() => handleStatusChange('lista')}
+              onClick={() => handleStatusChange('entregada')}
             >
               <CheckCircle2 size={14} />
               Marcar como lista
             </Button>
           )}
 
-        {/* Mechanic: delete own orders (assigned to or created by them) */}
-        {role === 'mechanic' && isOwn && (
+        {/* Strategist: delete own orders (assigned to or created by them) */}
+        {role === 'strategist' && isOwn && (
           <Button variant="danger" size="sm" loading={loading} onClick={handleDelete}>
             <Trash2 size={13} />
           </Button>
         )}
 
-        {/* Admin: asignar mecánico con la lista desplegable propia (si no tiene uno) */}
+        {/* Admin: asignar estratega con la lista desplegable propia (si no tiene uno) */}
         {role === 'admin' &&
-          !order.assigned_mechanic_id &&
-          (mechanics.length > 0 || canCreateMechanic) && (
-            <MechanicSelect
-              mechanics={mechanics}
+          !order.assigned_strategist_id &&
+          (strategists.length > 0 || canCreateStrategist) && (
+            <StrategistSelect
+              strategists={strategists}
               value={null}
-              onChange={(id) => id && handleAssignMechanic(id)}
+              onChange={(id) => id && handleAssignStrategist(id)}
               disabled={loading}
               includeNone={false}
-              placeholder="Asignar mecánico"
+              placeholder="Asignar estratega"
               compact
               float
-              onAddNew={canCreateMechanic ? () => setShowAddMechanic(true) : undefined}
+              onAddNew={canCreateStrategist ? () => setShowAddStrategist(true) : undefined}
             />
           )}
 
@@ -279,16 +281,16 @@ export default function OrderCard({
         )}
       </div>
 
-      {showAddMechanic && (
+      {showAddStrategist && (
         <Modal
-          isOpen={showAddMechanic}
-          onClose={() => setShowAddMechanic(false)}
-          title="Nuevo mecánico"
+          isOpen={showAddStrategist}
+          onClose={() => setShowAddStrategist(false)}
+          title="Nuevo estratega"
         >
-          <MechanicForm
-            workshopName={workshopName}
-            onSaved={handleMechanicCreated}
-            onClose={() => setShowAddMechanic(false)}
+          <StrategistForm
+            companyName={companyName}
+            onSaved={handleStrategistCreated}
+            onClose={() => setShowAddStrategist(false)}
           />
         </Modal>
       )}

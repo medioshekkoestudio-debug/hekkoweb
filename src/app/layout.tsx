@@ -2,19 +2,19 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Formula Taller',
-  description: 'Sistema de gestión de órdenes para taller mecánico',
+  title: 'Hekko',
+  description: 'Seguimiento de proyectos de diseño, marketing y desarrollo web',
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Formula Taller',
+    title: 'Hekko',
   },
   icons: {
     icon: '/icons/icon-192.png',
     apple: '/icons/icon-192.png',
   },
-  keywords: ['taller', 'mecánico', 'órdenes', 'vehículos'],
+  keywords: ['marketing', 'diseño gráfico', 'desarrollo web', 'proyectos', 'seguimiento'],
   robots: 'noindex',
 };
 

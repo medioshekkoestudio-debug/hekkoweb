@@ -1,12 +1,9 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
-import { createServerClient } from '@supabase/ssr';
-import type { Database } from '@/lib/types';
 
-// Routes that are accessible without authentication
+// Rutas accesibles sin iniciar sesión.
 const PUBLIC_ROUTES = [
   '/login',
-  '/registro',
   '/tracking',
   '/terminos',
   '/privacidad',
@@ -16,60 +13,31 @@ const PUBLIC_ROUTES = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow public routes (tracking pages and login)
+  // Rutas públicas (seguimiento del cliente, login y páginas legales).
   if (PUBLIC_ROUTES.some((route) => pathname.startsWith(route))) {
     return await updateSession(request).then((r) => r.supabaseResponse);
   }
 
-  // Allow API auth callback
+  // Callback de autenticación.
   if (pathname.startsWith('/api/auth')) {
     return NextResponse.next();
   }
 
-  // Allow public tracking API
+  // API pública de seguimiento (el token de la orden es la llave).
   if (pathname.startsWith('/api/tracking')) {
     return NextResponse.next();
   }
 
-  // Allow public workshop registration API
-  if (pathname.startsWith('/api/register')) {
-    return NextResponse.next();
-  }
-
-  // Superadmin API: the route handlers enforce platform-admin auth themselves
-  // (getPlatformAdmin). Don't run the workshop/profile logic here, and never
-  // redirect an API request.
-  if (pathname.startsWith('/api/superadmin')) {
-    return NextResponse.next();
-  }
-
-  // Superadmin panel. Superadmins have NO profiles row, so they must be handled
-  // before the profile-based logic below (which would bounce them to /login).
-  if (pathname.startsWith('/superadmin')) {
-    // Login page is public.
-    if (pathname.startsWith('/superadmin/login')) {
-      return await updateSession(request).then((r) => r.supabaseResponse);
-    }
-    const { supabaseResponse, user } = await updateSession(request);
-    if (!user) {
-      return NextResponse.redirect(new URL('/superadmin/login', request.url));
-    }
-    // Membership ("is this user a platform admin?") is verified server-side in
-    // the /superadmin page (getPlatformAdmin), which redirects non-admins to
-    // /superadmin/login.
-    return supabaseResponse;
-  }
-
   const { supabaseResponse, user, supabase } = await updateSession(request);
 
-  // If not authenticated, redirect to login
+  // Sin sesión → al login.
   if (!user) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirectedFrom', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Get user role from profiles table
+  // Rol del usuario desde la tabla profiles.
   const { data: profileData } = await supabase
     .from('profiles')
     .select('role, active')
@@ -78,7 +46,7 @@ export async function middleware(request: NextRequest) {
 
   const profile = profileData as unknown as { role: string; active: boolean } | null;
 
-  // Inactive users → login
+  // Usuarios inactivos → al login.
   if (!profile || !profile.active) {
     const loginUrl = new URL('/login', request.url);
     return NextResponse.redirect(loginUrl);
@@ -86,20 +54,20 @@ export async function middleware(request: NextRequest) {
 
   const role = profile.role;
 
-  // Guard /admin routes — only admins allowed
+  // /admin es solo del administrador.
   if (pathname.startsWith('/admin') && role !== 'admin') {
-    return NextResponse.redirect(new URL('/mecanico', request.url));
+    return NextResponse.redirect(new URL('/estratega', request.url));
   }
 
-  // Guard /mecanico routes — only mechanics (and admins for flexibility) allowed
-  if (pathname.startsWith('/mecanico') && role === 'admin') {
+  // /estratega es el panel de los estrategas; el admin tiene el suyo.
+  if (pathname.startsWith('/estratega') && role === 'admin') {
     return NextResponse.redirect(new URL('/admin', request.url));
   }
 
-  // Root: redirect based on role
+  // Raíz: redirigir según el rol.
   if (pathname === '/') {
     return NextResponse.redirect(
-      new URL(role === 'admin' ? '/admin' : '/mecanico', request.url)
+      new URL(role === 'admin' ? '/admin' : '/estratega', request.url)
     );
   }
 
@@ -109,11 +77,11 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths EXCEPT:
-     * - _next/static (static files)
-     * - _next/image (image optimization)
+     * Todas las rutas EXCEPTO:
+     * - _next/static (archivos estáticos)
+     * - _next/image (optimización de imágenes)
      * - favicon.ico
-     * - public folder files
+     * - carpeta public
      */
     '/((?!_next/static|_next/image|favicon.ico|icons|manifest|sw\\.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],

@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Order, Profile, Mechanic, OrderStatus } from '@/lib/types';
+import type { Order, Profile, Strategist, OrderStatus } from '@/lib/types';
+import { SERVICE_LABELS } from '@/lib/types';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import OrderForm from '@/components/orders/OrderForm';
-import MechanicForm from '@/components/mechanics/MechanicForm';
-import MechanicSelect from '@/components/orders/MechanicSelect';
+import StrategistForm from '@/components/strategists/StrategistForm';
+import StrategistSelect from '@/components/orders/StrategistSelect';
 import Select from '@/components/ui/Select';
 import StageTimeline from '@/components/orders/StageTimeline';
 import InitialAttachments from '@/components/orders/InitialAttachments';
@@ -24,7 +25,8 @@ import {
   MessageCircle,
   Edit2,
   Trash2,
-  Car,
+  Briefcase,
+  Tag,
   User,
   Phone,
   Calendar,
@@ -33,28 +35,31 @@ import {
 
 interface OrderDetailClientProps {
   order: Order;
-  mechanics: Profile[];
+  strategists: Profile[];
   startInEdit: boolean;
+  /** Nombre de la empresa, para los mensajes al cliente. */
+  companyName: string;
 }
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
 const STATUS_OPTIONS: { value: OrderStatus; label: string }[] = [
-  { value: 'sin_mecanico', label: 'Sin mecánico asignado' },
-  { value: 'con_mecanico', label: 'En progreso' },
-  { value: 'lista', label: 'Vehículo listo' },
+  { value: 'sin_estratega', label: 'Sin estratega asignado' },
+  { value: 'con_estratega', label: 'En progreso' },
+  { value: 'entregada', label: 'Entregado' },
 ];
 
 export default function OrderDetailClient({
   order: initialOrder,
-  mechanics: initialMechanics,
+  strategists: initialStrategists,
   startInEdit,
+  companyName,
 }: OrderDetailClientProps) {
   const router = useRouter();
   const [order, setOrder] = useState<Order>(initialOrder);
-  const [mechanics, setMechanics] = useState<Profile[]>(initialMechanics);
+  const [strategists, setStrategists] = useState<Profile[]>(initialStrategists);
   const [showEdit, setShowEdit] = useState(startInEdit);
-  const [showAddMechanic, setShowAddMechanic] = useState(false);
+  const [showAddStrategist, setShowAddStrategist] = useState(false);
   const [changingStatus, setChangingStatus] = useState(false);
   const [assigning, setAssigning] = useState(false);
 
@@ -62,7 +67,7 @@ export default function OrderDetailClient({
   const trackingUrl = `${SITE_URL}/tracking/${order.public_token}`;
   const waLink = buildWhatsAppLink(
     order.client_whatsapp,
-    buildTrackingMessage(order.client_first_name, order.public_token, SITE_URL, order.workshop?.name)
+    buildTrackingMessage(order.client_first_name, order.public_token, SITE_URL, companyName)
   );
 
   async function handleDelete() {
@@ -85,21 +90,21 @@ export default function OrderDetailClient({
     }
   }
 
-  async function handleAssignMechanic(mechanicId: string | null) {
+  async function handleAssignStrategist(strategistId: string | null) {
     setAssigning(true);
     const res = await fetch(`/api/orders/${order.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ assigned_mechanic_id: mechanicId }),
+      body: JSON.stringify({ assigned_strategist_id: strategistId }),
     });
     setAssigning(false);
     if (res.ok) setOrder(await res.json());
   }
 
-  // Mecánico creado desde el selector: agregarlo a la lista y asignarlo a la orden.
-  function handleMechanicCreated(m: Mechanic) {
-    setMechanics((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
-    handleAssignMechanic(m.id);
+  // Estratega creado desde el selector: agregarlo a la lista y asignarlo a la orden.
+  function handleStrategistCreated(m: Strategist) {
+    setStrategists((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+    handleAssignStrategist(m.id);
   }
 
   function handleEdited(updated: Order) {
@@ -155,12 +160,13 @@ export default function OrderDetailClient({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <InfoRow icon={<Car size={14} />} label="Vehículo" value={order.car_model} />
+          <InfoRow icon={<Briefcase size={14} />} label="Proyecto" value={order.project_name} />
+          <InfoRow icon={<Tag size={14} />} label="Servicio" value={SERVICE_LABELS[order.service_type]} />
           <InfoRow icon={<Phone size={14} />} label="WhatsApp" value={order.client_whatsapp} />
           <InfoRow
             icon={<User size={14} />}
-            label="Mecánico"
-            value={order.assigned_mechanic?.full_name ?? 'Sin asignar'}
+            label="Estratega"
+            value={order.assigned_strategist?.full_name ?? 'Sin asignar'}
           />
           <InfoRow
             icon={<Calendar size={14} />}
@@ -196,19 +202,19 @@ export default function OrderDetailClient({
           />
         </div>
 
-        {/* Assign mechanic — directamente desde el resumen, sin abrir "Editar" */}
+        {/* Assign strategist — directamente desde el resumen, sin abrir "Editar" */}
         <div className="form-field" style={{ marginBottom: 12 }}>
-          <label className="form-label">Asignar mecánico</label>
-          <MechanicSelect
-            mechanics={mechanics}
-            value={order.assigned_mechanic_id ?? null}
-            onChange={(id) => handleAssignMechanic(id)}
+          <label className="form-label">Asignar estratega</label>
+          <StrategistSelect
+            strategists={strategists}
+            value={order.assigned_strategist_id ?? null}
+            onChange={(id) => handleAssignStrategist(id)}
             disabled={assigning}
-            onAddNew={() => setShowAddMechanic(true)}
+            onAddNew={() => setShowAddStrategist(true)}
           />
-          {mechanics.length === 0 && (
+          {strategists.length === 0 && (
             <span style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 4, display: 'block' }}>
-              No hay mecánicos. Crea uno en la sección Mecánicos.
+              No hay estrategas. Crea uno en la sección Estrategas.
             </span>
           )}
         </div>
@@ -223,7 +229,7 @@ export default function OrderDetailClient({
               e.preventDefault();
               openWhatsApp(
                 order.client_whatsapp,
-                buildTrackingMessage(order.client_first_name, order.public_token, SITE_URL, order.workshop?.name)
+                buildTrackingMessage(order.client_first_name, order.public_token, SITE_URL, companyName)
               );
             }}
             style={{
@@ -306,26 +312,26 @@ export default function OrderDetailClient({
         title="Editar orden"
       >
         <OrderForm
-          mechanics={mechanics}
+          strategists={strategists}
           order={order}
           onSuccess={handleEdited}
           onCancel={() => setShowEdit(false)}
-          canCreateMechanic
-          workshopName={order.workshop?.name}
-          onMechanicCreated={handleMechanicCreated}
+          canCreateStrategist
+          companyName={companyName}
+          onStrategistCreated={handleStrategistCreated}
         />
       </Modal>
 
-      {showAddMechanic && (
+      {showAddStrategist && (
         <Modal
-          isOpen={showAddMechanic}
-          onClose={() => setShowAddMechanic(false)}
-          title="Nuevo mecánico"
+          isOpen={showAddStrategist}
+          onClose={() => setShowAddStrategist(false)}
+          title="Nuevo estratega"
         >
-          <MechanicForm
-            workshopName={order.workshop?.name}
-            onSaved={handleMechanicCreated}
-            onClose={() => setShowAddMechanic(false)}
+          <StrategistForm
+            companyName={companyName}
+            onSaved={handleStrategistCreated}
+            onClose={() => setShowAddStrategist(false)}
           />
         </Modal>
       )}

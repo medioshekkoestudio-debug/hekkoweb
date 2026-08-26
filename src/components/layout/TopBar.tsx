@@ -1,6 +1,6 @@
 'use client';
 
-import { LogOut, Wrench } from 'lucide-react';
+import { LogOut, Sparkles } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import type { Profile } from '@/lib/types';
@@ -9,9 +9,11 @@ import { getInitials } from '@/lib/utils';
 interface TopBarProps {
   profile: Profile;
   title?: string;
+  /** Logo de Hekko cargado desde /admin/empresa; si no hay, se usa el ícono. */
+  logoUrl?: string | null;
 }
 
-export default function TopBar({ profile, title }: TopBarProps) {
+export default function TopBar({ profile, title, logoUrl }: TopBarProps) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -46,21 +48,33 @@ export default function TopBar({ profile, title }: TopBarProps) {
           style={{
             width: 34,
             height: 34,
-            background: 'linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700))',
+            background: logoUrl
+              ? 'var(--color-surface-2)'
+              : 'linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700))',
             borderRadius: 9,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            overflow: 'hidden',
           }}
         >
-          <Wrench size={18} color="#0D0F1A" strokeWidth={2.5} />
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logoUrl}
+              alt=""
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          ) : (
+            <Sparkles size={18} color="#0D0F1A" strokeWidth={2.5} />
+          )}
         </div>
         <div>
           <p style={{ fontSize: 14, fontWeight: 700, lineHeight: 1 }}>
-            {title || 'Formula Taller'}
+            {title || 'Hekko'}
           </p>
           <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', lineHeight: 1, marginTop: 2 }}>
-            {profile.role === 'admin' ? 'Administrador' : 'Mecánico'}
+            {profile.role === 'admin' ? 'Administrador' : 'Estratega'}
           </p>
         </div>
       </div>

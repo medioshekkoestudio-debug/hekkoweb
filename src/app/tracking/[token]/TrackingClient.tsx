@@ -1,12 +1,15 @@
 'use client';
 
 import type { Order, OrderStage, StageStatus, OrderStatus } from '@/lib/types';
+import { SERVICE_LABELS } from '@/lib/types';
 import { formatDate, ORDER_STATUS_LABELS } from '@/lib/utils';
-import { CheckCircle2, Circle, Loader2, Car, Wrench, Clock } from 'lucide-react';
+import { CheckCircle2, Circle, Loader2, Briefcase, Tag, UserRound, Clock, Sparkles } from 'lucide-react';
 import AttachmentGallery from '@/components/orders/AttachmentGallery';
 
 interface TrackingClientProps {
   order: Order;
+  companyName: string;
+  companyLogo: string | null;
 }
 
 const STAGE_ICONS: Record<StageStatus, React.ReactNode> = {
@@ -27,31 +30,29 @@ const STAGE_ICONS: Record<StageStatus, React.ReactNode> = {
 };
 
 const STATUS_BG: Record<OrderStatus, string> = {
-  sin_mecanico: 'rgba(255,255,255,0.06)',
-  con_mecanico: 'rgba(245,158,11,0.1)',
-  lista: 'rgba(16,185,129,0.1)',
+  sin_estratega: 'rgba(255,255,255,0.06)',
+  con_estratega: 'rgba(245,158,11,0.1)',
+  entregada: 'rgba(16,185,129,0.1)',
 };
 
 const STATUS_COLOR: Record<OrderStatus, string> = {
-  sin_mecanico: 'var(--color-text-secondary)',
-  con_mecanico: '#fbbf24',
-  lista: '#34d399',
+  sin_estratega: 'var(--color-text-secondary)',
+  con_estratega: '#fbbf24',
+  entregada: '#34d399',
 };
 
-export default function TrackingClient({ order }: TrackingClientProps) {
+export default function TrackingClient({ order, companyName, companyLogo }: TrackingClientProps) {
   const allStages = (order.stages ?? []) as OrderStage[];
-  // La posición 0 es la "recepción" (archivos adjuntados al crear la orden):
-  // es información principal, no una etapa del servicio.
+  // La posición 0 son los materiales que el cliente entregó al abrir la orden:
+  // es información base del proyecto, no una etapa del seguimiento.
   const intake = allStages.find((s) => s.position === 0);
   const intakeAttachments = intake?.attachments ?? [];
   const stages = allStages.filter((s) => s.position > 0);
   const done = stages.filter((s) => s.status === 'done').length;
   const progress = stages.length > 0 ? Math.round((done / stages.length) * 100) : 0;
   const clientName = `${order.client_first_name} ${order.client_last_name}`;
-  const workshopName = order.workshop?.name ?? 'Taller';
-  const workshopLogo = order.workshop?.logo_url ?? null;
 
-  const mechanic = order.assigned_mechanic as { full_name: string } | null | undefined;
+  const strategist = order.assigned_strategist as { full_name: string } | null | undefined;
 
   return (
     <div
@@ -76,7 +77,7 @@ export default function TrackingClient({ order }: TrackingClientProps) {
           style={{
             width: 38,
             height: 38,
-            background: workshopLogo
+            background: companyLogo
               ? 'var(--color-surface-2)'
               : 'linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700))',
             borderRadius: 10,
@@ -86,21 +87,21 @@ export default function TrackingClient({ order }: TrackingClientProps) {
             overflow: 'hidden',
           }}
         >
-          {workshopLogo ? (
+          {companyLogo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={workshopLogo}
-              alt={workshopName}
+              src={companyLogo}
+              alt={companyName}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           ) : (
-            <Wrench size={20} color="#0D0F1A" strokeWidth={2.5} />
+            <Sparkles size={20} color="#0D0F1A" strokeWidth={2.5} />
           )}
         </div>
         <div>
-          <p style={{ fontWeight: 700, fontSize: 15, lineHeight: 1 }}>{workshopName}</p>
+          <p style={{ fontWeight: 700, fontSize: 15, lineHeight: 1 }}>{companyName}</p>
           <p style={{ fontSize: 11, color: 'var(--color-text-muted)', lineHeight: 1, marginTop: 2 }}>
-            Seguimiento de servicio
+            Seguimiento de tu proyecto
           </p>
         </div>
       </div>
@@ -125,12 +126,12 @@ export default function TrackingClient({ order }: TrackingClientProps) {
             height: 10,
             borderRadius: '50%',
             background: STATUS_COLOR[order.status],
-            boxShadow: order.status === 'lista'
+            boxShadow: order.status === 'entregada'
               ? '0 0 0 4px rgba(16,185,129,0.2)'
-              : order.status === 'con_mecanico'
+              : order.status === 'con_estratega'
               ? '0 0 0 4px rgba(245,158,11,0.2)'
               : 'none',
-            animation: order.status !== 'sin_mecanico' ? 'pulse-glow 2s ease-in-out infinite' : 'none',
+            animation: order.status !== 'sin_estratega' ? 'pulse-glow 2s ease-in-out infinite' : 'none',
             flexShrink: 0,
           }}
         />
@@ -142,11 +143,11 @@ export default function TrackingClient({ order }: TrackingClientProps) {
               color: STATUS_COLOR[order.status],
             }}
           >
-            {order.status === 'lista'
-              ? '¡Tu vehículo está listo! 🎉'
-              : order.status === 'con_mecanico'
+            {order.status === 'entregada'
+              ? '¡Tu proyecto está listo! 🎉'
+              : order.status === 'con_estratega'
               ? 'En servicio 🔧'
-              : 'En espera de mecánico'}
+              : 'En espera de estratega'}
           </p>
           <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>
             {ORDER_STATUS_LABELS[order.status]}
@@ -164,13 +165,14 @@ export default function TrackingClient({ order }: TrackingClientProps) {
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <Row label="Cliente" value={clientName} />
-          <Row icon={<Car size={13} />} label="Vehículo" value={order.car_model} />
-          {mechanic && (
-            <Row icon={<Wrench size={13} />} label="Mecánico" value={mechanic.full_name} />
+          <Row icon={<Briefcase size={13} />} label="Proyecto" value={order.project_name} />
+          <Row icon={<Tag size={13} />} label="Servicio" value={SERVICE_LABELS[order.service_type]} />
+          {strategist && (
+            <Row icon={<UserRound size={13} />} label="Estratega" value={strategist.full_name} />
           )}
           <Row
             icon={<Clock size={13} />}
-            label="Recibido"
+            label="Iniciado"
             value={formatDate(order.created_at)}
           />
         </div>
@@ -384,7 +386,7 @@ export default function TrackingClient({ order }: TrackingClientProps) {
       </div>
 
       {/* Ready message */}
-      {order.status === 'lista' && (
+      {order.status === 'entregada' && (
         <div
           className="animate-slide-up"
           style={{
@@ -398,12 +400,12 @@ export default function TrackingClient({ order }: TrackingClientProps) {
         >
           <p style={{ fontSize: 24, marginBottom: 8 }}>🎉</p>
           <p style={{ fontWeight: 700, fontSize: 16, color: '#34d399' }}>
-            ¡Tu vehículo está listo!
+            ¡Tu proyecto está listo!
           </p>
           <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 6 }}>
-            Puedes pasar a retirar tu {order.car_model}.
+            Ya entregamos «{order.project_name}».
             <br />
-            ¡Gracias por confiar en {workshopName}!
+            ¡Gracias por confiar en {companyName}!
           </p>
         </div>
       )}
@@ -418,7 +420,7 @@ export default function TrackingClient({ order }: TrackingClientProps) {
           paddingBottom: 16,
         }}
       >
-        {workshopName} © {new Date().getFullYear()} • Esta página se actualiza en tiempo real
+        {companyName} © {new Date().getFullYear()} • Esta página se actualiza en tiempo real
       </p>
     </div>
   );

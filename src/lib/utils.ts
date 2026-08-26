@@ -50,18 +50,18 @@ export function buildTrackingMessage(
   clientName: string,
   token: string,
   siteUrl: string,
-  workshopName = 'nuestro taller'
+  companyName = 'Hekko'
 ): string {
   const url = `${siteUrl}/tracking/${token}`;
   return (
-    `Hola ${clientName}! Tu vehículo está en ${workshopName}.\n\n` +
-    `Puedes hacer seguimiento a tu orden aquí:\n${url}\n\n` +
+    `Hola ${clientName}! Ya arrancamos con tu proyecto en ${companyName}.\n\n` +
+    `Puedes seguir el avance aquí:\n${url}\n\n` +
     `¡Cualquier duda estamos a tu disposición!`
   );
 }
 
-// Message sent to the client about how a specific service stage is going.
-// `isFinal` = it's the last stage of the service (e.g. "Vehículo listo").
+// Mensaje que se le envía al cliente sobre el avance de una etapa concreta.
+// `isFinal` = es la última etapa del proyecto (ej. "Entrega final").
 export function buildStageReminderMessage(
   clientFirstName: string,
   stageName: string,
@@ -75,25 +75,25 @@ export function buildStageReminderMessage(
 
   if (isFinal && status === 'done') {
     return (
-      `¡${name}! Ya se completó la reparación de tu vehículo (etapa final: ${stageName}).\n\n` +
-      `Puedes verificarlo en el siguiente link:\n${url}`
+      `¡${name}! Tu proyecto está terminado (etapa final: ${stageName}).\n\n` +
+      `Puedes verlo en el siguiente link:\n${url}`
     );
   }
   if (status === 'done') {
     return (
-      `¡${name}! Ya se completó la etapa «${stageName}».\n\n` +
-      `Recuerda que puedes verificar tu vehículo desde el siguiente link:\n${url}`
+      `¡${name}! Ya completamos la etapa «${stageName}».\n\n` +
+      `Recuerda que puedes seguir tu proyecto desde el siguiente link:\n${url}`
     );
   }
   if (status === 'in_progress') {
     return (
       `¡${name}! Estamos trabajando en la etapa «${stageName}».\n\n` +
-      `Puedes seguir el avance de tu vehículo en el siguiente link:\n${url}`
+      `Puedes seguir el avance de tu proyecto en el siguiente link:\n${url}`
     );
   }
   return (
     `¡${name}! La etapa «${stageName}» está por comenzar.\n\n` +
-    `Puedes seguir el avance de tu vehículo en el siguiente link:\n${url}`
+    `Puedes seguir el avance de tu proyecto en el siguiente link:\n${url}`
   );
 }
 
@@ -102,10 +102,10 @@ export function buildCredentialsMessage(
   email: string,
   password: string,
   siteUrl: string,
-  workshopName = 'el taller'
+  companyName = 'Hekko'
 ): string {
   return (
-    `Hola ${name}! Estos son tus datos de acceso a ${workshopName}:\n\n` +
+    `Hola ${name}! Estos son tus datos de acceso a ${companyName}:\n\n` +
     `Usuario: ${email}\n` +
     `Contraseña: ${password}\n\n` +
     `Ingresa aquí:\n${siteUrl}/login\n\n` +
@@ -125,26 +125,26 @@ export function buildCredentialsText(
 // Order status labels
 // ============================================================================
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  sin_mecanico: 'Sin mecánico',
-  con_mecanico: 'En progreso',
-  lista: 'Vehículo listo',
+  sin_estratega: 'Sin estratega',
+  con_estratega: 'En progreso',
+  entregada: 'Entregado',
 };
 
 export const ORDER_STATUS_COLORS: Record<
   OrderStatus,
   { bg: string; text: string; dot: string }
 > = {
-  sin_mecanico: {
+  sin_estratega: {
     bg: 'bg-ink-800',
     text: 'text-ink-200',
     dot: 'bg-ink-400',
   },
-  con_mecanico: {
+  con_estratega: {
     bg: 'bg-amber-900/40',
     text: 'text-amber-300',
     dot: 'bg-amber-400',
   },
-  lista: {
+  entregada: {
     bg: 'bg-emerald-900/40',
     text: 'text-emerald-300',
     dot: 'bg-emerald-400',
@@ -167,7 +167,7 @@ export function cn(...classes: (string | undefined | null | false)[]): string {
   return classes.filter(Boolean).join(' ');
 }
 
-// Turns a workshop name into a URL-friendly slug (accents removed).
+// Convierte un texto en un slug apto para URL (sin acentos).
 export function slugify(text: string): string {
   return text
     .normalize('NFD')

@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "Formula Taller",
-  "short_name": "FormuTaller",
-  "description": "Sistema de gestión de órdenes para taller mecánico",
+  "name": "Hekko",
+  "short_name": "Hekko",
+  "description": "Seguimiento de proyectos de diseño, marketing y desarrollo web",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

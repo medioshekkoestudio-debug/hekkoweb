@@ -1,9 +1,10 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import type { Order, Profile } from '@/lib/types';
+import { getCompany } from '@/lib/company';
 import OrderDetailClient from './OrderDetailClient';
 
-// Datos siempre frescos (incluye los mecánicos disponibles para asignar).
+// Datos siempre frescos (incluye los estrategas disponibles para asignar).
 export const dynamic = 'force-dynamic';
 
 interface Props {
@@ -14,12 +15,12 @@ interface Props {
 export default async function AdminOrderDetailPage({ params, searchParams }: Props) {
   const supabase = await createClient();
 
-  const [orderResult, mechanicsResult] = await Promise.all([
+  const [orderResult, strategistsResult, company] = await Promise.all([
     supabase
       .from('orders')
       .select(`
         *,
-        assigned_mechanic:profiles!assigned_mechanic_id(id, full_name, phone),
+        assigned_strategist:profiles!assigned_strategist_id(id, full_name, phone),
         stages:order_stages(*, attachments:stage_attachments(*))
       `)
       .eq('id', params.id)
@@ -27,22 +28,24 @@ export default async function AdminOrderDetailPage({ params, searchParams }: Pro
     supabase
       .from('profiles')
       .select('*')
-      .eq('role', 'mechanic')
+      .eq('role', 'strategist')
       .eq('active', true)
       .order('full_name'),
+    getCompany(),
   ]);
 
   const orderData = orderResult.data;
   if (!orderData) notFound();
 
   const order = orderData as unknown as Order;
-  const mechanics = (mechanicsResult.data ?? []) as unknown as Profile[];
+  const strategists = (strategistsResult.data ?? []) as unknown as Profile[];
 
   return (
     <OrderDetailClient
       order={order}
-      mechanics={mechanics}
+      strategists={strategists}
       startInEdit={searchParams.edit === '1'}
+      companyName={company?.name ?? 'Hekko'}
     />
   );
 }

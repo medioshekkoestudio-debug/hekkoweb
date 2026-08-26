@@ -552,7 +552,7 @@ export default function StageTimeline({
                                   stage.status,
                                   publicToken,
                                   SITE_URL,
-                                  slugify(stage.name) === 'vehiculo-listo'
+                                  slugify(stage.name) === 'entrega-final'
                                 )
                               )
                             }

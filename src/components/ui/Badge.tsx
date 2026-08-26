@@ -10,9 +10,9 @@ interface BadgeProps {
 }
 
 const STATUS_STYLES: Record<OrderStatus, string> = {
-  sin_mecanico: 'badge badge-neutral',
-  con_mecanico: 'badge badge-warning',
-  lista: 'badge badge-success',
+  sin_estratega: 'badge badge-neutral',
+  con_estratega: 'badge badge-warning',
+  entregada: 'badge badge-success',
 };
 
 export default function Badge({ status, className }: BadgeProps) {

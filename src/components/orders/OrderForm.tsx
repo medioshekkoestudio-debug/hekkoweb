@@ -1,19 +1,27 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { Order, Profile, Mechanic, CreateOrderPayload, OrderStage } from '@/lib/types';
+import type {
+  Order,
+  Profile,
+  Strategist,
+  CreateOrderPayload,
+  OrderStage,
+  ServiceType,
+} from '@/lib/types';
+import { SERVICE_LABELS, SERVICE_TYPES } from '@/lib/types';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
 import PhoneInput from '@/components/ui/PhoneInput';
-import SubscriptionModal from '@/components/orders/SubscriptionModal';
+import Select from '@/components/ui/Select';
 import AttachmentPicker from '@/components/orders/AttachmentPicker';
-import MechanicSelect from '@/components/orders/MechanicSelect';
-import MechanicForm from '@/components/mechanics/MechanicForm';
+import StrategistSelect from '@/components/orders/StrategistSelect';
+import StrategistForm from '@/components/strategists/StrategistForm';
 import { uploadStageAttachment } from '@/lib/attachments';
 import {
   User,
-  Car,
+  Briefcase,
   Plus,
   X,
   Mic,
@@ -21,25 +29,28 @@ import {
   FileText,
 } from 'lucide-react';
 
+const SERVICE_OPTIONS = SERVICE_TYPES.map((t) => ({ value: t, label: SERVICE_LABELS[t] }));
+
 interface OrderFormProps {
-  mechanics: Profile[];
+  strategists: Profile[];
   order?: Order; // if editing
   onSuccess: (order: Order) => void;
   onCancel: () => void;
-  /** Solo el admin puede crear mecánicos: habilita la opción "Agregar mecánico". */
-  canCreateMechanic?: boolean;
-  /** Nombre del taller (para el mensaje de credenciales del mecánico nuevo). */
-  workshopName?: string;
-  /** Se llama al crear un mecánico, para que el padre actualice su lista compartida. */
-  onMechanicCreated?: (m: Mechanic) => void;
+  /** Solo el admin puede crear estrategas: habilita la opción "Agregar estratega". */
+  canCreateStrategist?: boolean;
+  /** Nombre de la empresa (para el mensaje de credenciales del estratega nuevo). */
+  companyName?: string;
+  /** Se llama al crear un estratega, para que el padre actualice su lista compartida. */
+  onStrategistCreated?: (m: Strategist) => void;
 }
 
 const EMPTY: CreateOrderPayload = {
   client_first_name: '',
   client_last_name: '',
   client_whatsapp: '',
-  car_model: '',
-  assigned_mechanic_id: null,
+  service_type: 'diseno_grafico',
+  project_name: '',
+  assigned_strategist_id: null,
   notes: '',
 };
 
@@ -49,33 +60,33 @@ interface PendingFile {
 }
 
 export default function OrderForm({
-  mechanics,
+  strategists,
   order,
   onSuccess,
   onCancel,
-  canCreateMechanic = false,
-  workshopName,
-  onMechanicCreated,
+  canCreateStrategist = false,
+  companyName,
+  onStrategistCreated,
 }: OrderFormProps) {
   const isEdit = !!order;
-  // Lista local de mecánicos: al crear uno nuevo desde aquí, se agrega y se selecciona.
-  const [mechanicsList, setMechanicsList] = useState<Profile[]>(mechanics);
-  const [showAddMechanic, setShowAddMechanic] = useState(false);
+  // Lista local de estrategas: al crear uno nuevo desde aquí, se agrega y se selecciona.
+  const [strategistsList, setStrategistsList] = useState<Profile[]>(strategists);
+  const [showAddStrategist, setShowAddStrategist] = useState(false);
   const [form, setForm] = useState<CreateOrderPayload>(
     order
       ? {
           client_first_name: order.client_first_name,
           client_last_name: order.client_last_name,
           client_whatsapp: order.client_whatsapp,
-          car_model: order.car_model,
-          assigned_mechanic_id: order.assigned_mechanic_id,
+          service_type: order.service_type,
+          project_name: order.project_name,
+          assigned_strategist_id: order.assigned_strategist_id,
           notes: order.notes ?? '',
         }
       : { ...EMPTY }
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [paywall, setPaywall] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingFile[]>([]);
   const [showPicker, setShowPicker] = useState(false);
   const [phase, setPhase] = useState<'idle' | 'creating' | 'uploading'>('idle');
@@ -92,12 +103,16 @@ export default function OrderForm({
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  // Mecánico creado desde el propio formulario: agregarlo a la lista, seleccionarlo
+  function setService(value: string) {
+    setForm((prev) => ({ ...prev, service_type: value as ServiceType }));
+  }
+
+  // Estratega creado desde el propio formulario: agregarlo a la lista, seleccionarlo
   // y avisar al padre para que actualice su lista compartida.
-  function handleMechanicCreated(m: Mechanic) {
-    setMechanicsList((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
-    set('assigned_mechanic_id', m.id);
-    onMechanicCreated?.(m);
+  function handleStrategistCreated(m: Strategist) {
+    setStrategistsList((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+    set('assigned_strategist_id', m.id);
+    onStrategistCreated?.(m);
   }
 
   function addFiles(files: File[]) {
@@ -132,7 +147,7 @@ export default function OrderForm({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...form,
-        assigned_mechanic_id: form.assigned_mechanic_id || null,
+        assigned_strategist_id: form.assigned_strategist_id || null,
         notes: form.notes || null,
       }),
     });
@@ -141,10 +156,6 @@ export default function OrderForm({
       setLoading(false);
       setPhase('idle');
       const data = await res.json().catch(() => ({}));
-      if (res.status === 402 || data.limitReached) {
-        setPaywall(data.error || null);
-        return;
-      }
       setError(data.error || 'Error al guardar la orden');
       return;
     }
@@ -152,7 +163,7 @@ export default function OrderForm({
     const saved: Order = await res.json();
 
     // Upload the initial attachments to the first stage (intake). They then
-    // show up in the stage timeline (admin/mechanic) and the client tracking.
+    // show up in the stage timeline (admin/strategist) and the client tracking.
     if (!isEdit && pending.length > 0) {
       setPhase('uploading');
       const stages = ((saved.stages ?? []) as OrderStage[])
@@ -188,16 +199,6 @@ export default function OrderForm({
 
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {paywall !== null && (
-        <SubscriptionModal
-          message={paywall || undefined}
-          onClose={() => {
-            setPaywall(null);
-            onCancel();
-          }}
-        />
-      )}
-
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <Input
           label="Nombre"
@@ -223,24 +224,37 @@ export default function OrderForm({
         required
       />
 
+      <div className="form-field">
+        <label className="form-label" htmlFor="orden-servicio">
+          Servicio
+        </label>
+        <Select
+          id="orden-servicio"
+          options={SERVICE_OPTIONS}
+          value={form.service_type}
+          onChange={setService}
+          disabled={loading}
+        />
+      </div>
+
       <Input
-        label="Modelo del vehículo"
-        placeholder="Toyota Corolla 2019"
-        value={form.car_model}
-        onChange={(e) => set('car_model', e.target.value)}
+        label="Nombre del proyecto"
+        placeholder="Rebranding Café Luna"
+        value={form.project_name}
+        onChange={(e) => set('project_name', e.target.value)}
         required
-        icon={<Car size={15} />}
+        icon={<Briefcase size={15} />}
       />
 
-      {/* Mechanic selector */}
+      {/* Strategist selector */}
       <div className="form-field">
-        <label className="form-label">Mecánico asignado</label>
-        <MechanicSelect
-          mechanics={mechanicsList}
-          value={form.assigned_mechanic_id ?? null}
-          onChange={(id) => set('assigned_mechanic_id', id)}
+        <label className="form-label">Estratega asignado</label>
+        <StrategistSelect
+          strategists={strategistsList}
+          value={form.assigned_strategist_id ?? null}
+          onChange={(id) => set('assigned_strategist_id', id)}
           disabled={loading}
-          onAddNew={canCreateMechanic ? () => setShowAddMechanic(true) : undefined}
+          onAddNew={canCreateStrategist ? () => setShowAddStrategist(true) : undefined}
         />
       </div>
 
@@ -249,7 +263,7 @@ export default function OrderForm({
         <label className="form-label">Notas adicionales</label>
         <textarea
           className="form-input"
-          placeholder="Observaciones, descripción del problema..."
+          placeholder="Alcance del proyecto, entregables, observaciones..."
           value={form.notes ?? ''}
           onChange={(e) => set('notes', e.target.value)}
           rows={3}
@@ -310,16 +324,16 @@ export default function OrderForm({
         <AttachmentPicker onFiles={addFiles} onClose={() => setShowPicker(false)} />
       )}
 
-      {showAddMechanic && (
+      {showAddStrategist && (
         <Modal
-          isOpen={showAddMechanic}
-          onClose={() => setShowAddMechanic(false)}
-          title="Nuevo mecánico"
+          isOpen={showAddStrategist}
+          onClose={() => setShowAddStrategist(false)}
+          title="Nuevo estratega"
         >
-          <MechanicForm
-            workshopName={workshopName}
-            onSaved={handleMechanicCreated}
-            onClose={() => setShowAddMechanic(false)}
+          <StrategistForm
+            companyName={companyName}
+            onSaved={handleStrategistCreated}
+            onClose={() => setShowAddStrategist(false)}
           />
         </Modal>
       )}

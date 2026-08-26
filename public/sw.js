@@ -1,10 +1,10 @@
-// Formula Taller — Service Worker
+// Hekko — Service Worker
 // Cache-first for static assets, network-first for navigation & API calls.
 // IMPORTANT: never intercept /_next/ — those are build-hashed assets that
 // change on every build; the browser's HTTP cache handles them. Caching them
 // here would serve stale chunks after a rebuild and break the whole page.
 
-const CACHE_NAME = 'formula-taller-v4';
+const CACHE_NAME = 'hekko-v1';
 const STATIC_ASSETS = [
   '/login',
   '/manifest.webmanifest',

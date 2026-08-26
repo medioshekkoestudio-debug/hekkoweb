@@ -1,145 +1,92 @@
-# Formula Taller — PWA de Gestión de Taller Mecánico
+# Hekko
 
-Una Progressive Web App (PWA) fullstack construida con **Next.js 14 + Supabase** para la gestión de órdenes de servicio de un taller mecánico.
+PWA de **seguimiento de proyectos** para Hekko, estudio de estrategas de marketing
+(diseño gráfico, marketing y desarrollo web).
 
-## 🚀 Stack Tecnológico
-
-- **Frontend**: Next.js 14 (App Router) + TypeScript
-- **Backend**: Next.js Route Handlers (API Routes)
-- **Base de datos**: Supabase (PostgreSQL)
-- **Autenticación**: Supabase Auth (email + password)
-- **Estilos**: Vanilla CSS (design system propio)
-- **PWA**: Web Manifest + Service Worker manual
-- **Deploy**: Vercel + Supabase Cloud
+El equipo abre una orden por cada proyecto de cliente, la asigna a un estratega y va
+marcando el avance por etapas. El cliente sigue ese avance desde un **enlace público**
+que se comparte por WhatsApp — sin cuenta, sin instalar nada.
 
 ---
 
-## 📁 Estructura del Proyecto
+## Los tres accesos
 
-```
-src/
-  app/
-    login/              # Página de login (admin + mecánico)
-    admin/              # Panel de administrador
-      page.tsx          # Dashboard con estadísticas
-      ordenes/          # Lista y detalle de órdenes
-      mecanicos/        # Gestión de mecánicos
-    mecanico/           # Panel de mecánico
-      page.tsx          # Mis órdenes asignadas
-      ordenes/[id]/     # Gestión de etapas
-    tracking/[token]/   # Vista pública del cliente (sin auth)
-    api/                # API Routes (backend)
-  components/
-    ui/                 # Button, Input, Modal, Badge
-    layout/             # TopBar, BottomNav
-    orders/             # OrderCard, OrderForm, StageTimeline
-    mechanics/          # MechanicCard, MechanicForm
-  lib/
-    supabase/           # Clientes browser/server/service
-    types.ts            # TypeScript types del schema
-    utils.ts            # Helpers y formatters
-  middleware.ts         # Protección de rutas por rol
-supabase/
-  migrations/
-    0001_init.sql       # Schema: tablas, enums, triggers
-    0002_rls.sql        # Row Level Security policies
-scripts/
-  create-admin.mjs     # Script para crear el admin inicial
-```
+| Quién | Entra por | Qué hace |
+|---|---|---|
+| **Administrador** | `/admin` | Da de alta estrategas, crea y asigna órdenes, ve todo. |
+| **Estratega** | `/estratega` | Trabaja las órdenes que tiene asignadas y actualiza sus etapas. |
+| **Cliente** | `/tracking/<token>` | Ve el avance de su proyecto. Sin login. |
 
 ---
 
-## ⚙️ Configuración Inicial
+## Stack
 
-### 1. Variables de entorno
+- **Next.js 14** (App Router) + **React 18** + **TypeScript**
+- **Supabase** — Postgres + Auth + Storage, con RLS activo
+- **Tailwind** (parcial) + estilos en línea
+- Desplegado en **Vercel**
 
-Copia `.env.example` a `.env.local` y completa los valores:
+---
 
-```bash
-cp .env.example .env.local
-```
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://TU-PROYECTO.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
-SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key
-NEXT_PUBLIC_SITE_URL=https://tu-app.vercel.app
-```
-
-### 2. Base de datos
-
-Aplica las migraciones en tu proyecto Supabase:
-
-```bash
-# Opción A: Supabase CLI (recomendado)
-supabase link --project-ref TU-PROJECT-REF
-supabase db push
-
-# Opción B: Copiar y ejecutar en el SQL Editor de Supabase Dashboard
-# Ejecutar en orden: 0001_init.sql → 0002_rls.sql
-```
-
-### 3. Crear el administrador inicial
-
-```bash
-# Configura en .env.local (opcional, tiene defaults):
-# ADMIN_EMAIL=admin@formulataller.com
-# ADMIN_PASSWORD=Admin1234!
-# ADMIN_NAME=Administrador
-
-npm run seed:admin
-```
-
-### 4. Instalar y ejecutar
+## Arrancar en local
 
 ```bash
 npm install
-npm run dev        # Desarrollo en http://localhost:3000
-npm run build      # Build de producción
+cp .env.example .env.local   # y rellena los valores de Supabase
+npm run dev
 ```
 
----
+Abre <http://localhost:3000>.
 
-## 🔐 Autenticación y Roles
+### Variables de entorno
 
-| Rol | Acceso |
-|-----|--------|
-| `admin` | Panel `/admin` — CRUD completo de órdenes, gestión de mecánicos |
-| `mechanic` | Panel `/mecanico` — Solo sus órdenes asignadas, gestión de etapas |
-| Público | `/tracking/[token]` — Solo lectura, sin auth |
+Son 4 (ver `.env.example`):
 
----
+| Variable | Para qué |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | URL del proyecto Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Llave pública |
+| `SUPABASE_SERVICE_ROLE_KEY` | Llave privada (solo servidor) |
+| `NEXT_PUBLIC_SITE_URL` | URL pública, para armar los enlaces de seguimiento |
 
-## 🔑 Flujo de Uso
-
-1. **Admin** crea mecánicos en `/admin/mecanicos`
-2. **Admin** o **mecánico** crea una orden con datos del cliente
-3. Al guardar, se genera un **link único** de tracking (`/tracking/[token]`)
-4. El link se envía por **WhatsApp** directamente desde la app
-5. El **mecánico** gestiona las etapas del servicio (completar, agregar custom)
-6. El **cliente** puede ver el progreso en tiempo real desde su móvil
+> Las `NEXT_PUBLIC_*` se hornean en el build: si las cambias en Vercel hay que **redesplegar**.
 
 ---
 
-## 📱 PWA
+## Base de datos
 
-La app funciona como PWA instalable en iOS y Android:
+Las migraciones están en `supabase/migrations/` y se corren **en orden** desde el
+**SQL Editor** de Supabase:
 
-- Manifest en `/public/manifest.webmanifest`
-- Service Worker en `/public/sw.js` (cache-first estático, network-first API)
-- Menú inferior (bottom navigation) para navegación móvil
+1. `0001_hekko_init.sql` — enums, tablas, triggers y helpers
+2. `0002_hekko_rls.sql` — políticas RLS + bucket `stage-files`
+
+Después, crea el usuario administrador:
+
+```bash
+npm run seed:admin
+```
+
+### Modelo
+
+| Tabla | Para qué |
+|---|---|
+| `company_settings` | Marca de Hekko (nombre, logo, WhatsApp). Fila única `id = 1`. |
+| `profiles` | Usuarios del equipo (`admin` / `strategist`). `id` = `auth.users.id`. |
+| `orders` | Órdenes de cliente: servicio, proyecto, WhatsApp, estratega asignado, `public_token`. |
+| `order_stages` | Etapas de cada orden. La **posición 0** guarda los materiales que entregó el cliente. |
+| `stage_attachments` | Archivos de cada etapa (imágenes, video, audio, documentos). |
+
+**Servicios:** `diseno_grafico`, `marketing`, `desarrollo_web`
+**Estados de orden:** `sin_estratega`, `con_estratega`, `entregada`
+**Estados de etapa:** `pending`, `in_progress`, `done`
 
 ---
 
-## 🚀 Deploy en Vercel
+## Documentación
 
-1. Push el repo a GitHub
-2. Conecta con Vercel
-3. Agrega las variables de entorno en Vercel Dashboard
-4. Deploy automático en cada push a `main`
-
-### Variables requeridas en Vercel:
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `NEXT_PUBLIC_SITE_URL` (tu URL de Vercel, ej: `https://formula-taller.vercel.app`)
+- [`DEPLOY.md`](DEPLOY.md) — desplegar en Supabase + Vercel, paso a paso
+- [`COMANDOS.md`](COMANDOS.md) — comandos útiles y consultas SQL
+- [`CONTEXTO.md`](CONTEXTO.md) — cómo funciona por dentro
+- [`CACHE.md`](CACHE.md) — service worker y caché de la PWA
+- `CREDENCIALES.md` — credenciales (local, no se sube al repo)

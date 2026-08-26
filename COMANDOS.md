@@ -1,103 +1,124 @@
-# 🛠️ Comandos útiles — Formula Taller
-
-Referencia rápida de los comandos usados. Última actualización: **2026-07-03**.
-
-> **Cómo ejecutarlos aquí:** escribe el comando con un **`!` al inicio** en el chat
-> (ej. `! npm run build`) y se ejecuta en esta sesión, mostrando el resultado.
-> Todos se corren **en la carpeta del proyecto** y los scripts leen las claves de `.env.local`.
+# ⌨️ Comandos y consultas útiles — Hekko
 
 ---
 
-## 🔑 Superadmin de plataforma
+## Desarrollo
 
-**Crear un superadmin** (acceso al panel `/superadmin`):
 ```bash
-npm run seed:superadmin -- <email> <password> ["Nombre"]
-# ej.
-npm run seed:superadmin -- medios.hekkoestudio@gmail.com "MiClave123" "Formula Taller"
-```
-- Si el correo ya existía, **solo lo marca como superadmin** (no cambia la contraseña).
-- La contraseña debe tener **mínimo 6 caracteres**.
-
-**Cambiar la contraseña de un superadmin (o de cualquier cuenta por su correo):**
-```bash
-npm run set:superadmin-password -- <email> <nueva_password>
-# ej.
-npm run set:superadmin-password -- medios.hekkoestudio@gmail.com "NuevaClave123"
+npm install          # instalar dependencias
+npm run dev          # servidor local en http://localhost:3000
+npm run build        # build de producción (falla si hay error de tipos o lint)
+npm run lint         # solo el linter
+npx tsc --noEmit     # solo comprobar tipos, sin compilar
 ```
 
-> Entrar al panel: `https://formulataller.com/superadmin/login` (o el login normal, que
-> redirige al panel si la cuenta es superadmin).
+> Antes de hacer push, corre `npm run build`. Es exactamente lo que corre Vercel:
+> si pasa en local, el deploy no se cae.
 
 ---
 
-## 🚀 Subir cambios a producción
+## Usuarios
 
 ```bash
-git add .
-git commit -m "describe el cambio"
-git push          # Vercel redespliega solo en ~1 min
+npm run seed:admin   # crea (o repara) el administrador de Hekko
 ```
-> Si el cambio incluye una **migración de base de datos**, córrela **primero** en el
-> SQL Editor de Supabase y **después** haz el `push`.
 
-Ver en qué quedó el repositorio:
+Es idempotente: si el usuario ya existe le reafirma la contraseña y el rol `admin`.
+Para usar otras credenciales, define `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `ADMIN_NAME`
+en `.env.local` antes de correrlo.
+
+Los **estrategas** se crean desde la app, en `/admin/estrategas`.
+
+---
+
+## Git
+
 ```bash
-git log origin/main -1 --oneline   # último commit publicado
-git status -sb                     # estado local
+git status                        # qué cambió
+git add -A && git commit -m "..." # guardar
+git push                          # subir → Vercel redespliega solo
+git log --oneline -10             # últimos commits
 ```
 
 ---
 
-## 🧪 Desarrollo y verificación
+## Consultas SQL (Supabase → SQL Editor)
 
-```bash
-npm run dev          # levantar la app en local (http://localhost:3000)
-npx tsc --noEmit     # revisar tipos (TypeScript) sin compilar
-npm run build        # compilar como en producción (detecta errores antes de subir)
-npm run lint         # linter de Next.js
-```
+### Ver el equipo
 
----
-
-## 🗄️ Base de datos (Supabase)
-
-**Migraciones:** se corren pegando el archivo `supabase/migrations/000X_*.sql` en
-**Supabase → SQL Editor → New query → Run**. Son idempotentes (se pueden repetir).
-
-Scripts de base de datos (requieren el CLI de Supabase enlazado):
-```bash
-npm run db:push      # aplica las migraciones al proyecto enlazado
-npm run db:reset     # reinicia la base local (¡destructivo!)
-```
-
-**Consultas útiles** (pegar en el SQL Editor):
 ```sql
--- Ver a qué está atada una cuenta por su correo
-select u.email, p.role, w.name as taller
+select p.full_name, p.role, p.active, u.email, p.created_at
+from public.profiles p
+join auth.users u on u.id = p.id
+order by p.role, p.full_name;
+```
+
+### Convertir a alguien en administrador
+
+```sql
+update public.profiles p
+set role = 'admin'
 from auth.users u
-left join public.profiles p on p.id = u.id
-left join public.workshops w on w.id = p.workshop_id
-where u.email = 'medios.hekkoestudio@gmail.com';
-
--- Quitar el perfil de taller de una cuenta (dejarla solo superadmin)
-delete from public.profiles p using auth.users u
-where p.id = u.id and u.email = 'medios.hekkoestudio@gmail.com';
+where p.id = u.id
+  and u.email = 'correo@ejemplo.com';
 ```
+
+### Ver las órdenes con su estratega
+
+```sql
+select
+  o.created_at::date               as fecha,
+  o.client_first_name || ' ' || o.client_last_name as cliente,
+  o.project_name                   as proyecto,
+  o.service_type                   as servicio,
+  o.status                         as estado,
+  p.full_name                      as estratega
+from public.orders o
+left join public.profiles p on p.id = o.assigned_strategist_id
+order by o.created_at desc;
+```
+
+### Avance de una orden
+
+```sql
+select s.position, s.name, s.status, s.completed_at
+from public.order_stages s
+join public.orders o on o.id = s.order_id
+where o.public_token = 'PEGA-AQUI-EL-TOKEN'
+order by s.position;
+```
+
+### Cambiar el nombre o el WhatsApp de la empresa
+
+```sql
+update public.company_settings
+set name = 'Hekko', whatsapp = '+58...'
+where id = 1;
+```
+
+### Agregar un servicio nuevo
+
+```sql
+alter type public.service_type add value 'produccion_audiovisual';
+```
+
+> Después hay que añadirlo también en `SERVICE_LABELS`, en `src/lib/types.ts`,
+> para que aparezca con su etiqueta en la app.
+
+### Cambiar las etapas por defecto de las órdenes nuevas
+
+Edita la función `seed_default_stages` (está en `0001_hekko_init.sql`) y vuelve a
+ejecutar ese bloque `create or replace function ...` en el SQL Editor.
+Solo afecta a las órdenes que se creen a partir de ese momento.
 
 ---
 
-## 👤 Otros scripts
+## Reiniciar la app en el navegador
 
-```bash
-npm run seed:admin   # crea un admin de taller por defecto (usa variables de .env.local)
-```
+Si tras un deploy ves contenido viejo, el service worker está sirviendo caché:
 
----
+1. DevTools → **Application → Service Workers → Unregister**
+2. **Application → Storage → Clear site data**
+3. Recarga
 
-## 📄 Notas
-
-- `.env.local` debe tener `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-  `SUPABASE_SERVICE_ROLE_KEY` y `NEXT_PUBLIC_SITE_URL`. Está en `.gitignore` (no se sube al repo).
-- Los scripts `seed:superadmin` y `set:superadmin-password` **no contienen claves**: las leen de `.env.local`.
-- Más contexto del proyecto en `CONTEXTO.md`; cómo subir cambios en `ACTUALIZAR-PRODUCCION.md`.
+Ver [`CACHE.md`](CACHE.md) para el detalle de cómo funciona la caché.

@@ -14,5 +14,5 @@ export default async function RootPage() {
     .single();
 
   if (profile?.role === 'admin') redirect('/admin');
-  redirect('/mecanico');
+  redirect('/estratega');
 }

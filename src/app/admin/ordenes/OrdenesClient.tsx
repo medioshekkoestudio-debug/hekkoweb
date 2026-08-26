@@ -1,45 +1,29 @@
 'use client';
 
 import { useState } from 'react';
-import type { Order, Profile, Mechanic, OrderStatus } from '@/lib/types';
+import type { Order, Profile, Strategist, OrderStatus } from '@/lib/types';
 import OrderCard from '@/components/orders/OrderCard';
 import OrderForm from '@/components/orders/OrderForm';
-import SubscriptionModal from '@/components/orders/SubscriptionModal';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import { Plus, ClipboardList, Search } from 'lucide-react';
 
 interface OrdenesClientProps {
   initialOrders: Order[];
-  mechanics: Profile[];
-  orderLimit: number;
-  isSubscribed: boolean;
-  supportPhones: string[];
+  strategists: Profile[];
 }
 
 type FilterStatus = 'all' | OrderStatus;
 
 export default function OrdenesClient({
   initialOrders,
-  mechanics: initialMechanics,
-  orderLimit,
-  isSubscribed,
-  supportPhones,
+  strategists: initialStrategists,
 }: OrdenesClientProps) {
   const [orders, setOrders] = useState<Order[]>(initialOrders);
-  const [mechanics, setMechanics] = useState<Profile[]>(initialMechanics);
+  const [strategists, setStrategists] = useState<Profile[]>(initialStrategists);
   const [showCreate, setShowCreate] = useState(false);
-  const [showPaywall, setShowPaywall] = useState(false);
   const [filter, setFilter] = useState<FilterStatus>('all');
   const [search, setSearch] = useState('');
-
-  function handleNew() {
-    if (!isSubscribed && orders.length >= orderLimit) {
-      setShowPaywall(true);
-    } else {
-      setShowCreate(true);
-    }
-  }
 
   const filtered = orders.filter((o) => {
     const matchStatus = filter === 'all' || o.status === filter;
@@ -47,7 +31,7 @@ export default function OrdenesClient({
     const matchSearch =
       !q ||
       `${o.client_first_name} ${o.client_last_name}`.toLowerCase().includes(q) ||
-      o.car_model.toLowerCase().includes(q) ||
+      o.project_name.toLowerCase().includes(q) ||
       o.client_whatsapp.includes(q);
     return matchStatus && matchSearch;
   });
@@ -69,15 +53,15 @@ export default function OrdenesClient({
     setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
   }
 
-  function handleMechanicCreated(m: Mechanic) {
-    setMechanics((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+  function handleStrategistCreated(m: Strategist) {
+    setStrategists((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
   }
 
   const FILTERS: { value: FilterStatus; label: string }[] = [
     { value: 'all', label: `Todas (${orders.length})` },
-    { value: 'sin_mecanico', label: 'Sin asignar' },
-    { value: 'con_mecanico', label: 'En progreso' },
-    { value: 'lista', label: 'Listas' },
+    { value: 'sin_estratega', label: 'Sin asignar' },
+    { value: 'con_estratega', label: 'En progreso' },
+    { value: 'entregada', label: 'Entregadas' },
   ];
 
   return (
@@ -92,7 +76,7 @@ export default function OrdenesClient({
         }}
       >
         <h1 style={{ fontSize: 20, fontWeight: 800 }}>Todas las órdenes</h1>
-        <Button variant="primary" size="sm" onClick={handleNew}>
+        <Button variant="primary" size="sm" onClick={() => setShowCreate(true)}>
           <Plus size={15} />
           Nueva
         </Button>
@@ -112,7 +96,7 @@ export default function OrdenesClient({
         />
         <input
           className="form-input"
-          placeholder="Buscar por nombre, vehículo o teléfono..."
+          placeholder="Buscar por cliente, proyecto o teléfono..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{ paddingLeft: 36 }}
@@ -176,13 +160,13 @@ export default function OrdenesClient({
             <OrderCard
               key={order.id}
               order={order}
-              mechanics={mechanics}
+              strategists={strategists}
               role="admin"
               onDelete={handleDelete}
               onStatusChange={handleStatusChange}
               onUpdate={handleUpdate}
-              canCreateMechanic
-              onMechanicCreated={handleMechanicCreated}
+              canCreateStrategist
+              onStrategistCreated={handleStrategistCreated}
             />
           ))}
         </div>
@@ -195,17 +179,13 @@ export default function OrdenesClient({
         title="Nueva orden"
       >
         <OrderForm
-          mechanics={mechanics}
+          strategists={strategists}
           onSuccess={handleCreated}
           onCancel={() => setShowCreate(false)}
-          canCreateMechanic
-          onMechanicCreated={handleMechanicCreated}
+          canCreateStrategist
+          onStrategistCreated={handleStrategistCreated}
         />
       </Modal>
-
-      {showPaywall && (
-        <SubscriptionModal onClose={() => setShowPaywall(false)} phones={supportPhones} />
-      )}
     </div>
   );
 }

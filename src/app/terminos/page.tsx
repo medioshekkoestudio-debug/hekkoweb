@@ -1,34 +1,37 @@
 import LegalPage from '@/components/legal/LegalPage';
 
-export const metadata = { title: 'Términos y Condiciones — Formula Taller' };
+export const metadata = { title: 'Términos y Condiciones — Hekko' };
 
 // Texto base: revísalo/ajústalo (o hazlo revisar por un abogado) según tu negocio.
 export default function TerminosPage() {
   return (
-    <LegalPage title="Términos y Condiciones" updated="2026-07-02">
+    <LegalPage title="Términos y Condiciones" updated="2026-08-25">
       <p>
-        Al registrar un taller y usar Formula Taller (la &quot;Plataforma&quot;) aceptas estos
+        Al usar la plataforma de seguimiento de Hekko (la &quot;Plataforma&quot;) aceptas estos
         Términos. Si no estás de acuerdo, no uses el servicio.
       </p>
 
       <h2>1. El servicio</h2>
       <p>
-        Formula Taller es una aplicación web para gestionar órdenes de servicio de talleres
-        mecánicos y compartir el seguimiento con los clientes. El servicio se ofrece
-        &quot;tal cual&quot;, pudiendo cambiar o mejorar sus funciones con el tiempo.
+        Hekko es un estudio de estrategas de marketing que ofrece servicios de diseño gráfico,
+        marketing y desarrollo web. Esta Plataforma es la herramienta con la que gestionamos las
+        órdenes de nuestros clientes y compartimos el avance de cada proyecto. El servicio se
+        ofrece &quot;tal cual&quot;, pudiendo cambiar o mejorar sus funciones con el tiempo.
       </p>
 
-      <h2>2. Cuenta del taller</h2>
+      <h2>2. Cuentas de acceso</h2>
       <p>
-        Eres responsable de la veracidad de los datos de registro, de la seguridad de tu
-        contraseña y de la actividad de los usuarios (mecánicos) que crees dentro de tu taller.
+        Las cuentas del equipo (administración y estrategas) las crea y administra Hekko. Cada
+        persona es responsable de la seguridad de su contraseña y de la actividad realizada con
+        su cuenta. Los clientes no necesitan cuenta: acceden al seguimiento de su proyecto
+        mediante un enlace privado.
       </p>
 
-      <h2>3. Planes y pagos</h2>
+      <h2>3. Enlace de seguimiento</h2>
       <p>
-        El plan gratuito permite un número limitado de órdenes. Para superar ese límite deberás
-        contratar la suscripción correspondiente. Las condiciones y precios podrán actualizarse
-        avisando con antelación razonable.
+        Cada orden genera un enlace único que permite ver el avance del proyecto sin iniciar
+        sesión. Quien tenga el enlace puede ver esa información, así que compártelo únicamente
+        con el cliente correspondiente.
       </p>
 
       <h2>4. Uso correcto</h2>
@@ -37,24 +40,25 @@ export default function TerminosPage() {
         infrinja derechos de terceros y a no intentar vulnerar su seguridad.
       </p>
 
-      <h2>5. Datos de tus clientes</h2>
+      <h2>5. Datos de los clientes</h2>
       <p>
-        Al cargar datos de tus clientes (nombre, WhatsApp, vehículo, fotos, etc.) declaras contar
-        con su consentimiento. El taller es responsable de esos datos; Formula Taller actúa como
-        proveedor tecnológico que los procesa para prestar el servicio.
+        Al cargar datos de un cliente (nombre, WhatsApp, materiales del proyecto, archivos, etc.)
+        el equipo declara contar con su consentimiento. Hekko trata esos datos únicamente para
+        prestar el servicio contratado.
       </p>
 
-      <h2>6. Disponibilidad y responsabilidad</h2>
+      <h2>6. Entregables y propiedad</h2>
+      <p>
+        Los archivos que se comparten en el seguimiento son avances del trabajo contratado. Las
+        condiciones de entrega, uso y cesión de derechos sobre los entregables finales se rigen
+        por el acuerdo comercial firmado con cada cliente.
+      </p>
+
+      <h2>7. Disponibilidad y responsabilidad</h2>
       <p>
         Hacemos esfuerzos razonables para mantener el servicio disponible, pero no garantizamos
         que sea ininterrumpido o libre de errores. En la medida permitida por la ley, no somos
         responsables por pérdidas indirectas derivadas del uso del servicio.
-      </p>
-
-      <h2>7. Cancelación</h2>
-      <p>
-        Puedes eliminar la cuenta de tu taller en cualquier momento desde el Perfil del Taller.
-        Esto borra de forma permanente tus datos, usuarios, órdenes y adjuntos.
       </p>
 
       <h2>8. Contacto</h2>

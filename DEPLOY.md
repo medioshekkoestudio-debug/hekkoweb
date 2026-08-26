@@ -1,161 +1,142 @@
-# 🚀 Despliegue a producción — Formula Taller
+# 🚀 Desplegar Hekko
 
-Guía paso a paso para subir el proyecto a producción usando **Supabase** (base de datos)
-y **Vercel** (hosting de la PWA en Next.js).
+Guía completa para dejar la app en producción: **Supabase** (base de datos) +
+**Vercel** (hosting), enlazados al repo de GitHub.
 
-> Datos del proyecto:
-> - Supabase project ref: `tsvaagakjkemavhdcroy`
-> - Repo GitHub: `https://github.com/somosformulataller/formulaTaller`
-
----
-
-## 0. Requisitos previos
-
-- Tener cuenta en [GitHub](https://github.com), [Supabase](https://supabase.com) y [Vercel](https://vercel.com).
-- Tener `git` instalado.
-- El esquema de la base de datos ya aplicado (ver paso 2).
+> **Datos del proyecto**
+> - Repo GitHub: `https://github.com/medioshekkoestudio-debug/hekkoweb`
+> - Correo del negocio: `medios.hekkoestudio@gmail.com`
+> - Supabase (project ref): `usoaajqdphfvvzwdhdzf`
+> - Proyecto Vercel: `hekkoweb/hekkoweb`
+> - URL de producción: `https://hekkoweb.vercel.app`
 
 ---
 
-## 1. Subir el código a GitHub
+## 1. Supabase
 
-La carpeta local todavía no es un repositorio git. Desde la raíz del proyecto:
+### 1.1 Crear el proyecto
 
-```bash
-git init
-git add .
-git commit -m "Formula Taller - initial production release"
-git branch -M main
-git remote add origin https://github.com/somosformulataller/formulaTaller.git
-git push -u origin main
-```
+1. Entra a [supabase.com/dashboard](https://supabase.com/dashboard) con
+   `medios.hekkoestudio@gmail.com`.
+2. **New project** → nombre `hekko`, elige región cercana y **guarda la contraseña
+   de la base de datos** en un lugar seguro.
+3. Espera a que termine de aprovisionar (~2 min).
 
-> ⚠️ Verifica que `.env.local` **NO** se suba: ya está listado en `.gitignore`.
-> Nunca subas tus claves secretas al repositorio.
+### 1.2 Correr las migraciones
 
-Si `git push` te pide credenciales, usa tu usuario de GitHub y un
-[Personal Access Token](https://github.com/settings/tokens) como contraseña.
+En **SQL Editor → New query**, pega y ejecuta **en este orden**:
+
+1. `supabase/migrations/0001_hekko_init.sql`
+2. `supabase/migrations/0002_hekko_rls.sql`
+
+Ambas son idempotentes: puedes volver a correrlas sin romper nada.
+
+Verifica en **Table Editor** que existan: `company_settings`, `profiles`, `orders`,
+`order_stages`, `stage_attachments`. Y en **Storage**, el bucket **`stage-files`**
+marcado como público.
+
+### 1.3 Copiar las llaves
+
+**Project Settings → API**. Necesitas tres valores:
+
+| Dónde dice | Va en |
+|---|---|
+| Project URL | `NEXT_PUBLIC_SUPABASE_URL` |
+| `anon` / publishable key | `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
+| `service_role` / secret key | `SUPABASE_SERVICE_ROLE_KEY` |
+
+> ⚠️ La `service_role` es **privada**: da acceso total saltándose RLS. Nunca la pongas
+> en una variable `NEXT_PUBLIC_*` ni la subas al repo.
+
+### 1.4 Configurar Auth
+
+**Authentication → Providers → Email**: deja habilitado email/contraseña y
+**desactiva "Confirm email"** — el admin crea las cuentas de los estrategas y deben
+poder entrar de inmediato.
 
 ---
 
-## 2. Base de datos (Supabase)
+## 2. Crear el usuario administrador
 
-> Si ya corriste `SETUP.sql`, **omite este paso** (ya está hecho).
-
-1. Entra a [Supabase → SQL Editor](https://supabase.com/dashboard/project/tsvaagakjkemavhdcroy/sql/new).
-2. Abre el archivo `SETUP.sql` de la raíz del proyecto y copia **todo** su contenido.
-3. Pégalo en el editor y pulsa **RUN**.
-
-Esto crea las tablas (`profiles`, `orders`, `order_stages`), enums, triggers y políticas RLS.
-Es idempotente: puedes correrlo varias veces sin romper nada.
-
-### Crear el usuario administrador
-
-Con el `.env.local` configurado, desde la raíz:
+En tu máquina, con `.env.local` ya lleno con los datos del paso 1.3:
 
 ```bash
 npm run seed:admin
 ```
 
-Crea el admin por defecto:
-- **Email:** `admin@formulataller.com`
-- **Password:** `Admin1234!`  ← *cámbiala tras el primer login*
-
-(Para personalizarlo: define `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` en `.env.local`.)
+Crea `medios.hekkoestudio@gmail.com` con rol `admin`. Las credenciales completas
+están en `CREDENCIALES.md` (local, no se sube al repo).
 
 ---
 
-## 3. Desplegar en Vercel
+## 3. Vercel
 
-### Opción A — Conectar el repo (recomendada, redeploys automáticos)
+### 3.1 Importar el repo
 
-1. Entra a [vercel.com/new](https://vercel.com/new).
-2. **Import Git Repository** → selecciona `somosformulataller/formulaTaller`.
-3. Framework: **Next.js** (se detecta solo). No cambies build/output.
-4. En **Environment Variables**, agrega las 4 variables (ver tabla abajo).
-5. Pulsa **Deploy**.
+1. Entra a [vercel.com/new](https://vercel.com/new) con `medios.hekkoestudio@gmail.com`.
+2. **Import Git Repository** → `medioshekkoestudio-debug/hekkoweb`.
+   Si no aparece, dale permiso al repo desde la GitHub App de Vercel.
+3. Framework: **Next.js** (lo detecta solo). No cambies los comandos de build.
 
-Cada `git push` a `main` desplegará automáticamente.
+### 3.2 Variables de entorno
 
-### Opción B — Vercel CLI
+Antes de desplegar, en **Settings → Environment Variables**, agrega las cuatro:
 
-```bash
-npm i -g vercel        # o usa: npx vercel
-vercel login
-vercel --prod
-```
-
-Sigue las preguntas (link/crear proyecto) y agrega las variables de entorno
-cuando lo pida, o configúralas luego en el dashboard.
-
----
-
-## 4. Variables de entorno en Vercel
-
-En **Project → Settings → Environment Variables**, agrega estas 4
-(marca *Production*, *Preview* y *Development*):
-
-| Variable | Valor | ¿Dónde sacarla? |
+| Variable | Valor | Nota |
 |---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | `https://tsvaagakjkemavhdcroy.supabase.co` | Supabase → Settings → API |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | tu *publishable key* (`sb_publishable_...`) | Supabase → Settings → API Keys |
-| `SUPABASE_SERVICE_ROLE_KEY` | tu *secret key* (`sb_secret_...`) | Supabase → Settings → API Keys (¡secreta!) |
-| `NEXT_PUBLIC_SITE_URL` | `https://TU-APP.vercel.app` | la URL que te da Vercel tras el deploy |
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://usoaajqdphfvvzwdhdzf.supabase.co` | Del paso 1.3 |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon key | Del paso 1.3 |
+| `SUPABASE_SERVICE_ROLE_KEY` | service role key | **Marcar como Sensitive** |
+| `NEXT_PUBLIC_SITE_URL` | `https://hekkoweb.vercel.app` | La URL real de producción |
 
-> 🔴 **Importante:** `NEXT_PUBLIC_SITE_URL` debe ser tu dominio real de producción.
-> De ahí se construyen los enlaces de tracking que se envían por WhatsApp.
-> Si lo dejas en `localhost`, los clientes no podrán abrir el seguimiento.
+> **Sobre `NEXT_PUBLIC_SITE_URL`:** es la que se usa para armar los enlaces de
+> seguimiento que se mandan por WhatsApp. Si queda mal, esos enlaces apuntarían a
+> `localhost`. Como es `NEXT_PUBLIC_*`, se hornea en el build: si la cambias,
+> hay que **redesplegar** (Deployments → ⋯ → Redeploy).
 
-Tras configurar/cambiar variables, haz un **Redeploy** para que tomen efecto.
+### 3.3 Desplegar
 
----
-
-## 5. Configurar Supabase para producción
-
-1. **URLs de autenticación** → [Supabase → Authentication → URL Configuration](https://supabase.com/dashboard/project/tsvaagakjkemavhdcroy/auth/url-configuration):
-   - **Site URL:** `https://TU-APP.vercel.app`
-   - **Redirect URLs:** agrega `https://TU-APP.vercel.app/**`
-2. Verifica que **Email confirmations** esté como prefieras (los usuarios se crean
-   ya confirmados desde el panel admin, así que no es crítico).
+**Deploy**. A partir de aquí, cada `git push` a `main` redespliega automáticamente.
 
 ---
 
-## 6. Verificación post-despliegue
+## 4. Volver a Supabase: URLs de autenticación
 
-Abre `https://TU-APP.vercel.app` y comprueba:
+Con la URL de Vercel ya en mano, ve a
+**Authentication → URL Configuration**:
 
-- [ ] Carga la pantalla de **login**.
-- [ ] Entras como **admin** (`admin@formulataller.com`).
-- [ ] Puedes **crear un mecánico**.
-- [ ] Puedes **crear una orden** y se genera el **enlace de tracking**.
-- [ ] El botón de **WhatsApp** abre el chat con el mensaje y el link correcto.
-- [ ] El enlace de **tracking** abre el seguimiento (en ventana de incógnito, sin login).
-- [ ] El **mecánico** entra con su cuenta y ve solo sus órdenes.
-- [ ] La app se puede **instalar como PWA** (icono "Agregar a pantalla de inicio").
+- **Site URL:** `https://hekkoweb.vercel.app`
+- **Redirect URLs:** agrega
+  - `https://hekkoweb.vercel.app/**`
+  - `https://hekkoweb.vercel.app/reset-password`
+  - `http://localhost:3000/**` (para desarrollo)
+
+Sin esto, el enlace de "restablecer contraseña" que llega por correo no funciona.
 
 ---
 
-## 7. Mantenimiento
+## 5. Comprobar que todo quedó bien
 
-### Cambios de esquema (migraciones futuras)
-Crea un nuevo archivo en `supabase/migrations/000X_descripcion.sql` y aplícalo en el
-**SQL Editor** de Supabase (o con `supabase db push` si configuras la CLI).
-Nunca edites una migración ya aplicada: crea una nueva.
+- [ ] Abres `https://hekkoweb.vercel.app/login` y carga.
+- [ ] Entras como **admin** con `medios.hekkoestudio@gmail.com`.
+- [ ] En `/admin/empresa` puedes cambiar el nombre y subir el logo.
+- [ ] Creas un **estratega** en `/admin/estrategas` y puedes entrar con su cuenta.
+- [ ] Creas una **orden** con servicio y nombre de proyecto.
+- [ ] Adjuntas una foto a una etapa y se ve.
+- [ ] Copias el enlace de seguimiento, lo abres **en una ventana privada** (sin sesión)
+      y ves el avance del proyecto.
+- [ ] Instalas la PWA desde el navegador móvil ("Agregar a pantalla de inicio").
 
-### Actualizar el código en producción
+---
+
+## Actualizar producción
+
 ```bash
-git add .
-git commit -m "describe el cambio"
-git push        # Vercel redespliega solo (Opción A)
+git add -A
+git commit -m "descripción del cambio"
+git push
 ```
 
----
-
-## 🔐 Checklist de seguridad
-
-- [ ] `.env.local` **no** está en el repo (confirmado en `.gitignore`).
-- [ ] La **service_role / secret key** solo vive en variables de entorno del servidor
-      (nunca en código cliente ni en variables `NEXT_PUBLIC_*`).
-- [ ] Contraseña del admin **cambiada** tras el primer login.
-- [ ] Si compartiste algún token (Vercel/Supabase) en chats o mensajes, **rótalo**.
-- [ ] RLS está **activado** en todas las tablas (lo hace `SETUP.sql`).
+Vercel redespliega solo. Si el cambio incluye una **migración de base de datos**,
+córrela en el SQL Editor de Supabase **antes** de hacer push — si no, la app nueva
+buscará una tabla o columna que todavía no existe.

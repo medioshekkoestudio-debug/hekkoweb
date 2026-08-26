@@ -1,29 +1,27 @@
 import { createServiceClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import type { UpdateOrderPayload } from '@/lib/types';
-import { getCaller, canManageOrder, canDeleteOrder } from '@/lib/api-auth';
+import { getCaller, isStaff, canManageOrder, canDeleteOrder } from '@/lib/api-auth';
 
 type Params = { params: { id: string } };
 
 const ORDER_SELECT = `
   *,
-  assigned_mechanic:profiles!assigned_mechanic_id(id, full_name, phone),
-  stages:order_stages(*),
-  workshop:workshops(name)
+  assigned_strategist:profiles!assigned_strategist_id(id, full_name, phone),
+  stages:order_stages(*)
 `;
 
-// GET /api/orders/:id — scoped to the caller's workshop.
+// GET /api/orders/:id
 export async function GET(_: Request, { params }: Params) {
   const caller = await getCaller();
   if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!caller.workshopId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!isStaff(caller)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const service = createServiceClient();
   const { data, error } = await service
     .from('orders')
     .select(ORDER_SELECT)
     .eq('id', params.id)
-    .eq('workshop_id', caller.workshopId)
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 404 });
@@ -34,18 +32,16 @@ export async function GET(_: Request, { params }: Params) {
 export async function PATCH(req: Request, { params }: Params) {
   const caller = await getCaller();
   if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  // Must be able to manage this order (belongs to the workshop; admin, or
-  // assigned mechanic).
   if (!(await canManageOrder(caller, params.id))) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const body: UpdateOrderPayload = await req.json();
 
-  // Auto-set status from mechanic assignment unless status is explicit.
+  // El estado se deriva de la asignación, salvo que venga explícito.
   const updates: UpdateOrderPayload = { ...body };
-  if ('assigned_mechanic_id' in body && !('status' in body)) {
-    updates.status = body.assigned_mechanic_id ? 'con_mecanico' : 'sin_mecanico';
+  if ('assigned_strategist_id' in body && !('status' in body)) {
+    updates.status = body.assigned_strategist_id ? 'con_estratega' : 'sin_estratega';
   }
 
   const service = createServiceClient();
@@ -53,7 +49,6 @@ export async function PATCH(req: Request, { params }: Params) {
     .from('orders')
     .update(updates)
     .eq('id', params.id)
-    .eq('workshop_id', caller.workshopId)
     .select(ORDER_SELECT)
     .single();
 
@@ -62,9 +57,8 @@ export async function PATCH(req: Request, { params }: Params) {
 }
 
 // DELETE /api/orders/:id
-// Admin: cualquier orden de su taller. Mecánico: solo las suyas (asignadas a
-// él o creadas por él). Esto lo resuelve canDeleteOrder (más estricto que
-// canManageOrder, que ahora permite a cualquier staff gestionar la orden).
+// Admin: cualquier orden. Estratega: solo las suyas (asignadas a él o creadas
+// por él). Lo resuelve canDeleteOrder, más estricto que canManageOrder.
 export async function DELETE(_: Request, { params }: Params) {
   const caller = await getCaller();
   if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -73,11 +67,7 @@ export async function DELETE(_: Request, { params }: Params) {
   }
 
   const service = createServiceClient();
-  const { error } = await service
-    .from('orders')
-    .delete()
-    .eq('id', params.id)
-    .eq('workshop_id', caller.workshopId);
+  const { error } = await service.from('orders').delete().eq('id', params.id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return new NextResponse(null, { status: 204 });

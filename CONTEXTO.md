@@ -1,266 +1,206 @@
-# 🧭 Contexto del proyecto — Formula Taller
+# 🧭 Contexto del proyecto — Hekko
 
-Documento de estado general del proyecto. Última actualización: **2026-07-03**.
-
-> **Novedades 2026-07-03** (esta sesión): panel de **superadmin de plataforma**
-> (seguimiento de talleres, suscripciones, correo/teléfono, restablecer contraseña),
-> **límite del plan gratuito editable** (global + por taller), **números de atención al
-> cliente** en el mensaje del límite, **selector de código de país** en todos los teléfonos
-> (formato internacional para WhatsApp), el **mecánico puede eliminar sus propias órdenes**,
-> **adjuntos editables** en el resumen de la orden y arreglos del **service worker** (orden vacía
-> al navegar) y del **borrado de adjuntos**. Detalle al final, sección "Actualización 2026-07-03".
+Cómo funciona la app por dentro. Última actualización: **2026-08-25**.
 
 ---
 
 ## ¿Qué es?
-**Formula Taller** es una **PWA** (aplicación web instalable) **multi-taller** (SaaS) para la
-gestión de talleres mecánicos. Cualquier taller puede **registrarse** y obtener su propio taller
-virtual **aislado**: el **administrador (dueño del taller)** y sus **mecánicos** manejan órdenes de
-servicio, y los **clientes** hacen seguimiento del estado de su vehículo mediante un enlace público
-(sin login) que se comparte por WhatsApp. Cada taller solo ve **sus** datos.
+
+**Hekko** es una **PWA** (app web instalable) de seguimiento de proyectos para el
+estudio Hekko, dedicado a **diseño gráfico, marketing y desarrollo web**.
+
+El equipo abre una **orden** por cada proyecto de cliente, la asigna a un **estratega**
+y va marcando el avance en **etapas**, adjuntando archivos en cada una. El cliente ve
+ese avance desde un **enlace público** que se le comparte por WhatsApp, sin cuenta y
+sin instalar nada.
+
+> **Historia:** el proyecto nació como *Formula Taller*, un SaaS multi-taller para
+> talleres mecánicos. En agosto de 2026 se reconvirtió a Hekko: una sola empresa, con
+> vocabulario de agencia. Se eliminaron el registro público de empresas, el panel de
+> superadmin de plataforma, las suscripciones y el límite del plan gratuito. Todo eso
+> sigue en el historial de git si algún día hace falta.
 
 ---
 
 ## Enlaces y cuentas
+
 | Recurso | Valor |
 |---|---|
-| Sitio en producción | `https://formulataller.com` (con `www` redirigiendo a la raíz) |
-| URL directa de Vercel | `https://formula-taller.vercel.app` |
-| Repositorio GitHub | `github.com/somosformulataller/formulaTaller` |
-| Proyecto Vercel | `formula-taller` (cuenta `somosformulataller`) |
-| Supabase (project ref) | `tsvaagakjkemavhdcroy` |
-| Dominio | `formulataller.com` (comprado en **Namecheap**, método A/CNAME) |
+| Repositorio GitHub | `github.com/medioshekkoestudio-debug/hekkoweb` |
 | Correo del negocio | `medios.hekkoestudio@gmail.com` |
+| Proyecto Supabase | `usoaajqdphfvvzwdhdzf` |
+| Proyecto Vercel | `hekkoweb/hekkoweb` |
+| URL de producción | `https://hekkoweb.vercel.app` (sin dominio propio) |
 
-**Auto-deploy:** cada `git push` a `main` en GitHub redespliega automáticamente en Vercel.
+**Auto-deploy:** cada `git push` a `main` redespliega en Vercel.
 
 ---
 
 ## Tecnología
+
 - **Next.js 14** (App Router) + **React 18** + **TypeScript**
-- **Supabase** (Postgres + Auth + Storage) con **RLS** activado
-- **Tailwind** (parcial) + estilos inline
-- Hosting en **Vercel** (plan gratuito, solo entorno Production)
+- **Supabase** (Postgres + Auth + Storage) con **RLS** activo
+- **Tailwind** (parcial) + estilos en línea
+- Hosting en **Vercel**
 
 ---
 
-## Modelo de datos (Supabase)
-**Roles:** `admin` y `mechanic` (enum `user_role`) **por taller**, más el **superadmin de
-plataforma** (por encima de los talleres, definido en la tabla `platform_admins`; no tiene perfil
-ni taller).
+## Los tres accesos
+
+| Rol | Ruta | Puede |
+|---|---|---|
+| **admin** | `/admin` | Todo: alta y baja de estrategas, crear/editar/eliminar cualquier orden, editar la marca de la empresa. |
+| **strategist** | `/estratega` | Ver y trabajar todas las órdenes; eliminar solo las suyas (asignadas a él o creadas por él). |
+| **cliente** | `/tracking/<token>` | Ver el avance de su proyecto. Sin sesión. |
+
+No hay registro público: las cuentas del equipo las crea el administrador desde
+`/admin/estrategas`.
+
+---
+
+## Modelo de datos
 
 | Tabla | Para qué |
 |---|---|
-| `workshops` | **Talleres (tenants).** Nombre, WhatsApp, dueño (`owner_id`), **`order_limit`** (override opcional del límite gratuito, `null` = usa el global), **`is_subscribed`** (plan pago → órdenes ilimitadas). |
-| `profiles` | Datos de usuarios (nombre, teléfono, rol, activo, **`workshop_id`**). `id` = `auth.users.id`. El email vive en `auth.users`. |
-| `orders` | Órdenes de servicio (**`workshop_id`**, cliente, vehículo, WhatsApp, mecánico asignado, estado, `public_token` único para el tracking). |
-| `order_stages` | Etapas del servicio de cada orden (nombre, **descripción**, estado, posición). La **posición 0** ("Recepción") guarda los adjuntos cargados al crear la orden. |
-| `stage_attachments` | Adjuntos (fotos/videos/audios/documentos) de cada etapa. |
-| `platform_admins` | **Superadmins de plataforma** (`user_id` → `auth.users`). RLS bloqueada: solo el service role la lee. |
-| `platform_settings` | Configuración global (fila única `id=1`): **`free_order_limit`** (límite gratuito global) y **`support_phones`** (números de atención al cliente). Lectura pública, escritura solo service role. |
+| `company_settings` | Marca de Hekko: nombre, logo, WhatsApp. **Fila única `id = 1`.** |
+| `profiles` | Usuarios del equipo (nombre, teléfono, rol, activo). `id` = `auth.users.id`. El correo vive en `auth.users`. |
+| `orders` | Órdenes de cliente: cliente, WhatsApp, `service_type`, `project_name`, estratega asignado, estado, `public_token` único para el seguimiento. |
+| `order_stages` | Etapas de cada orden (nombre, descripción, estado, posición). |
+| `stage_attachments` | Archivos de cada etapa (imágenes, video, audio, documentos). |
 
-> **Aislamiento por taller:** cada consulta se filtra por `workshop_id` en la app (`api-auth.ts`
-> resuelve el taller del usuario) + RLS por taller como red de seguridad.
+**Storage:** bucket **`stage-files`** (público) para archivos y logos.
 
-**Storage:** bucket **`stage-files`** (público) para las fotos/documentos.
+### Enums
 
-**Estados de orden:** `sin_mecanico`, `con_mecanico`, `lista`.
-**Estados de etapa:** `pending`, `in_progress`, `done`.
+| Enum | Valores |
+|---|---|
+| `user_role` | `admin`, `strategist` |
+| `order_status` | `sin_estratega`, `con_estratega`, `entregada` |
+| `stage_status` | `pending`, `in_progress`, `done` |
+| `service_type` | `diseno_grafico`, `marketing`, `desarrollo_web` |
 
-**Migraciones aplicadas en Supabase (en este orden):**
-1. `SETUP.sql` (tablas base, enums, triggers, RLS) — equivale a `0001` + `0002`.
-2. `0003_stage_description.sql` (columna `description` en etapas).
-3. `0004_stage_attachments.sql` (tabla de adjuntos + bucket `stage-files`).
-4. `0005_multi_tenant.sql` (**tabla `workshops` + `workshop_id`** en profiles/orders, backfill al taller
-   "Formula Taller", trigger y RLS por taller). **Correr esta migración ANTES de subir el código nuevo.**
-5. `0006_workshop_branding.sql` (columnas **`logo_url`** y **`slug`** en `workshops` + backfill de slugs).
-   El logo se guarda en el bucket `stage-files` (carpeta `logos/`). **Correr ANTES de subir el código.**
-6. `0007_order_limit.sql` (columna **`order_limit`** en `workshops`, default **3**). **Correr ANTES del código.**
-7. `0008_default_stages.sql` (nuevas **etapas por defecto**: Diagnóstico, Desmontaje de piezas,
-   Reemplazo/Reparación, Armado y prueba, Vehículo listo). Solo afecta a órdenes nuevas.
-8. `0009_platform_admins.sql` (**tabla `platform_admins`** + **`workshops.is_subscribed`** +
-   `handle_new_user` no crea perfil si el usuario no tiene taller —superadmins). **Correr ANTES del código.**
-9. `0010_free_order_limit.sql` (**tabla `platform_settings.free_order_limit`** global +
-   `workshops.order_limit` pasa a **override opcional** (`null` = usar el global); los talleres
-   existentes con el default 3 quedan en `null`). **Correr ANTES del código.**
-10. `0011_support_phones.sql` (columna **`platform_settings.support_phones`** `text[]`, con el número
-    de atención sembrado). **Correr ANTES del código.**
+### La etapa de posición 0
 
-> Las migraciones se corren manualmente en el **SQL Editor de Supabase** antes de subir el código
-> que las usa (si no, las vistas fallan al buscar la tabla/columna nueva).
+Al crear una orden, la app inserta una etapa especial en la **posición 0**,
+llamada **"Materiales del cliente"**: ahí van los archivos que se adjuntan en el
+formulario de creación (brief, referencias, logos, notas de voz).
+
+No es una etapa del seguimiento: se muestra aparte, como información base del
+proyecto. Las etapas reales van de la **posición 1** en adelante y las siembra el
+trigger `seed_default_stages`:
+
+1. Brief y diagnóstico
+2. Propuesta y estrategia
+3. Producción
+4. Revisión con el cliente
+5. Entrega final
+
+Son editables, reordenables y se pueden agregar o quitar desde la app.
 
 ---
 
-## Variables de entorno (4)
+## Migraciones
+
+Están en `supabase/migrations/` y se corren a mano en el **SQL Editor** de Supabase,
+en orden:
+
+1. `0001_hekko_init.sql` — enums, tablas, triggers, helpers de rol
+2. `0002_hekko_rls.sql` — políticas RLS + bucket `stage-files`
+
+Ambas son idempotentes.
+
+> Cuando un cambio de código necesite una migración nueva, **córrela en Supabase
+> antes de hacer push**: si no, la app nueva buscará una tabla o columna que aún no
+> existe y las vistas fallan.
+
+---
+
+## Seguridad
+
+- **RLS activo en todas las tablas.** Los helpers `is_staff()` e `is_admin()` son
+  `security definer` para evitar recursión al consultar `profiles` desde una política.
+- **El seguimiento del cliente NO pasa por RLS.** La ruta `/api/tracking/[token]` y la
+  página `/tracking/[token]` leen con el **service role** y filtran por `public_token`.
+  Por eso las tablas de órdenes están cerradas al público (`anon`): el token aleatorio
+  es la única llave, y no hay ninguna política que exponga las órdenes al navegador
+  sin sesión.
+- **`company_settings` sí es de lectura pública**: es solo nombre y logo, y hace falta
+  para pintar la marca en la página de seguimiento.
+- La `SUPABASE_SERVICE_ROLE_KEY` solo se usa en el servidor (rutas de API y
+  componentes de servidor). Nunca llega al navegador.
+
+### Quién puede qué, en las rutas de API
+
+`src/lib/api-auth.ts` centraliza esto:
+
+- `getCaller()` — resuelve id y rol desde la cookie de sesión.
+- `isStaff(caller)` — ¿es del equipo?
+- `canManageOrder()` — cualquier miembro del equipo puede trabajar cualquier orden.
+- `canDeleteOrder()` — más estricto: el admin borra cualquiera; el estratega solo las
+  suyas (asignadas a él o creadas por él).
+
+---
+
+## Variables de entorno
+
 | Variable | Nota |
 |---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | `https://tsvaagakjkemavhdcroy.supabase.co` |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | publishable key (pública) |
-| `SUPABASE_SERVICE_ROLE_KEY` | secret key (¡privada! marcada como *Sensitive* en Vercel) |
-| `NEXT_PUBLIC_SITE_URL` | `https://formulataller.com` |
+| `NEXT_PUBLIC_SUPABASE_URL` | URL del proyecto Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Llave pública |
+| `SUPABASE_SERVICE_ROLE_KEY` | Llave privada — marcada como *Sensitive* en Vercel |
+| `NEXT_PUBLIC_SITE_URL` | URL pública; se usa para armar los enlaces de seguimiento |
 
-> Las `NEXT_PUBLIC_*` se "hornean" en el build → tras cambiarlas hay que **Redeploy**.
-> `.env.local` (local) está en `.gitignore` y nunca se sube al repo.
-
----
-
-## Funcionalidades implementadas
-
-### Registro de talleres (multi-tenant)
-- **Registro público** en `/registro`: nombre del taller, correo, WhatsApp, nombre, apellido,
-  contraseña + confirmación. Crea el taller y su admin (**acceso inmediato**, sin verificación por correo).
-- **Perfil del Taller** (`/admin/taller`): el admin edita el **nombre**, **WhatsApp** y **logo** del taller,
-  ve su **enlace de login personalizado** (`/login/<slug>`) y puede **eliminar la cuenta** del taller
-  (borra todo: usuarios, órdenes, adjuntos; pide confirmar escribiendo el nombre del taller).
-  El nombre y el logo aparecen en el panel (TopBar), en el login personalizado y en el **tracking del cliente**.
-- Cada taller ve únicamente **sus** órdenes, mecánicos y adjuntos.
-
-### Plan gratuito / suscripción
-- **Límite efectivo** de un taller no suscrito = **`order_limit` propio** (si tiene) **ó el
-  `free_order_limit` global** (3 por defecto). Los talleres **suscritos** (`is_subscribed`) tienen
-  **órdenes ilimitadas**. Al alcanzar el tope, al crear otra orden sale un **modal** con los
-  **números de atención al cliente** (botones de WhatsApp) para pagar la suscripción. Se valida
-  **en el servidor** (`POST /api/orders` → `402`) y en el cliente.
-- **Todo se gestiona desde el panel de superadmin** (ya no hace falta SQL): cambiar el límite global,
-  ponerle un límite propio a un taller, marcar un taller como suscrito, y editar los números de atención.
-
-### Roles y acceso
-- Login por email/contraseña **único** para todos: al entrar, un **superadmin** va a `/superadmin`,
-  un **admin** a `/admin` y un **mecánico** a `/mecanico` (se decide tras el login consultando
-  `/api/superadmin/me` y luego el rol del perfil).
-- **Gestión de mecánicos** (admin): crear, **editar** (nombre/teléfono/email), **ver/copiar email**,
-  **cambiar contraseña**, **enviar credenciales por WhatsApp**, botón **"Reenviar acceso"**,
-  activar/desactivar.
-
-### Panel de superadmin de plataforma (`/superadmin`)
-Panel por encima de los talleres, para el dueño del sistema. Acceso solo para cuentas en
-`platform_admins`; login en `/superadmin/login` o por el login normal.
-- **Métricas:** total de talleres, suscritos y órdenes.
-- **Lista de talleres** con dueño, **correo de registro**, **teléfono**, nº de órdenes (**"X / límite"**)
-  y fecha de alta; con buscador.
-- **Suscripción:** interruptor por taller (**suscrito = órdenes ilimitadas**).
-- **Límite gratuito:** editar el **límite global** y/o un **límite propio por taller** (vacío = usa el global).
-- **Números de atención al cliente:** agregar/editar/eliminar (salen en el modal del límite).
-- **Restablecer contraseña** del dueño de un taller, de dos formas:
-  - **Enviar enlace por correo** (Supabase recover → página pública `/reset-password`).
-  - **Contraseña temporal** generada y mostrada para compartir (respaldo confiable, sin depender del correo).
-- **Crear superadmins** (manual): `npm run seed:superadmin -- <email> <password> ["Nombre"]`.
-  Cambiar contraseña de un superadmin: `npm run set:superadmin-password -- <email> <password>`.
-- ⚠️ Para que el **enlace por correo** redirija bien, agregar `https://formulataller.com/reset-password`
-  en Supabase → **Authentication → URL Configuration → Redirect URLs**. El correo de recuperación usa
-  el servicio integrado de Supabase (sin SMTP propio: **límite de envíos y posible spam**; por eso existe
-  la opción de contraseña temporal).
-
-### Órdenes
-- **Mismo flujo para admin y mecánico**: ambos pueden **ver todas las órdenes**, **crearlas**,
-  **editarlas**, **cambiar estado**, **asignar/reasignar mecánico** y **gestionar etapas/adjuntos** de
-  **cualquier** orden de su taller. En el **resumen de la orden** hay selectores de **Cambiar estado**
-  y **Asignar mecánico** (sin abrir "Editar"). (`canManageOrder` = cualquier staff de su taller.)
-- Al **crear** una orden se pueden **adjuntar datos iniciales** (foto/video/**nota de voz**/documento);
-  se guardan en la etapa de **"Recepción" (posición 0)** y los ven admin, mecánico y **cliente** (tracking).
-  En el resumen esos adjuntos se pueden **ver, agregar y eliminar**.
-- El mecánico puede **autoasignarse** una orden ("Asignarme").
-- **Filtro** en la vista del mecánico: **Mis órdenes / Todas** (+ por estado) y buscador.
-- **Eliminar órdenes** (más estricto, `canDeleteOrder`): el **admin** puede eliminar cualquier orden de
-  su taller; el **mecánico** solo las **suyas** (asignadas a él o creadas por él).
-
-### Tracking del cliente (público, sin login)
-- Enlace único por orden (`public_token`), que se puede **abrir**, **copiar** y **enviar por WhatsApp**.
-- Muestra el progreso, las **etapas** con su **descripción** y los **adjuntos** (fotos/documentos).
-
-### Etapas del servicio
-- **Título editable** y **descripción opcional** (admin y mecánico asignado).
-- **Etapas por defecto:** Diagnóstico, Desmontaje de piezas, Reemplazo/Reparación, Armado y prueba, Vehículo listo (editables).
-- **Reordenar arrastrando:** el admin o el mecánico pueden **arrastrar** (asa ⋮) las etapas para cambiar su orden (touch + mouse); se guarda vía `POST /api/orders/:id/stages/reorder`.
-- **Avisar al cliente:** cada etapa tiene un botón que abre WhatsApp con un mensaje según su **estado**
-  (completada / en progreso / pendiente) e incluye el **link de tracking**. La etapa **"Vehículo listo"**
-  usa un mensaje especial de "reparación finalizada". (`buildStageReminderMessage` en `utils.ts`.)
-- **Marcar/desmarcar** estado (Iniciar/Completar/Reabrir) con **cambio de ícono instantáneo** (optimista).
-- **Adjuntos multimedia** (una o varias a la vez): botón **"Agregar"** abre un modal con opciones:
-  **foto/video desde galería**, **tomar foto** (cámara), **hacer video** (cámara),
-  **grabar nota de voz** (micrófono, en la web), **adjuntar nota de voz** y **adjuntar documento**.
-  Se muestran en una **cuadrícula uniforme** de miniaturas; al hacer clic se abre un **lightbox**
-  (foto/video/audio en grande) con **descargar** y navegación entre elementos. Se pueden eliminar.
-- Las **imágenes se comprimen en el navegador** antes de subir (máx. 1600px, JPEG 0.8).
-- Los archivos se suben **directo a Storage con URL firmada** (evita el límite de ~4.5MB de Vercel;
-  soporta videos/audios hasta **50MB**). En el tracking del cliente también se muestran video y audio.
-- Botón **eliminar etapa** ubicado en la esquina inferior derecha (separado, con tinte rojo).
-
-### Seguridad (autorización en API)
-- Los endpoints validan rol y pertenencia: un mecánico solo gestiona etapas de sus órdenes asignadas.
-- La clave secreta (service role) solo se usa en el servidor.
-
-### WhatsApp / teléfonos
-- Los enlaces usan `wa.me`: se envían **desde el celular de quien hace clic** (admin o mecánico),
-  al destinatario del enlace. No hay un número emisor fijo (eso requeriría WhatsApp Business API).
-- **Selector de código de país** (`PhoneInput` + `lib/countries.ts`) en **todos** los campos de teléfono
-  (orden/cliente, mecánico, registro, perfil del taller, números de atención del panel). **Venezuela +58**
-  por defecto; se puede elegir otro país. Los números se guardan en **formato internacional**
-  (`+<código><número>`) para que WhatsApp abra bien en **cualquier dispositivo** (incluido WhatsApp Web).
-  Los números locales antiguos (`0424…`) siguen funcionando y se convierten al editarlos.
+> Las `NEXT_PUBLIC_*` se hornean en el build → tras cambiarlas hay que **redesplegar**.
+> `.env.local` está en `.gitignore` y nunca se sube al repo.
 
 ---
 
-## Documentos del proyecto (en la raíz)
-| Archivo | Contenido |
-|---|---|
-| `CONTEXTO.md` | Este documento (estado general). |
-| `PRODUCCION.md` | Bitácora de puesta en producción (GitHub, Vercel, Supabase). |
-| `ACTUALIZAR-PRODUCCION.md` | Cómo subir cambios a producción (`git add/commit/push`). |
-| `DNS-DOMINIO.md` | Cómo conectar el dominio (A/CNAME vs nameservers) en Namecheap. |
-| `MIGRACION.md` | Cómo migrar a otra cuenta de Supabase y de Vercel. |
-| `DEPLOY.md` | Guía original de despliegue. |
-| `TECNOLOGIAS.md` | Detalle de la stack. |
-| `CREDENCIALES.md` | Credenciales locales (en `.gitignore`, NO se sube). |
-| `README.md` | Descripción del proyecto. |
+## Mapa del código
 
----
-
-## Cómo subir cambios a producción
-```bash
-git add .
-git commit -m "describe el cambio"
-git push        # Vercel redespliega solo en ~1 min
 ```
-(Detalle en `ACTUALIZAR-PRODUCCION.md`.)
+src/
+├── app/
+│   ├── admin/              Panel del administrador
+│   │   ├── ordenes/        Lista y detalle de órdenes
+│   │   ├── estrategas/     Alta y edición del equipo
+│   │   └── empresa/        Marca de Hekko (nombre, logo, WhatsApp)
+│   ├── estratega/          Panel del estratega
+│   ├── tracking/[token]/   Seguimiento público del cliente
+│   ├── login/              Inicio de sesión
+│   ├── terminos/           Legales
+│   ├── privacidad/
+│   └── api/
+│       ├── orders/         CRUD de órdenes, etapas y adjuntos
+│       ├── strategists/    Alta, edición y baja del equipo
+│       ├── company/        Marca de la empresa (+ /logo)
+│       └── tracking/       Lectura pública por token
+├── components/
+│   ├── orders/             Formulario, tarjeta, línea de tiempo, adjuntos
+│   ├── strategists/        Formulario y tarjeta de estratega
+│   ├── layout/             TopBar, BottomNav
+│   └── ui/                 Botón, input, select, modal, badge...
+├── lib/
+│   ├── api-auth.ts         Quién puede qué en las rutas de API
+│   ├── company.ts          Lee la marca de Hekko
+│   ├── strategists.ts      Lista estrategas con su correo
+│   ├── supabase/           Clientes (navegador, servidor, middleware)
+│   ├── types.ts            Tipos + etiquetas de servicios
+│   └── utils.ts            Formatos, mensajes de WhatsApp, etiquetas de estado
+└── middleware.ts           Rutas públicas y guardas por rol
+```
 
 ---
 
-## Actualización 2026-07-03 (detalle de la sesión)
+## Detalles que cuesta redescubrir
 
-**Superadmin de plataforma** (migraciones `0009`–`0011` ya aplicadas en Supabase):
-- Panel `/superadmin` (login propio o por el login normal): métricas, lista de talleres con
-  correo/teléfono, suscripción (ilimitado), límite gratuito **global + por taller**, números de
-  atención al cliente y **restablecer contraseña** (enlace por correo o contraseña temporal).
-- Identidad en tabla `platform_admins`. Helper `getPlatformAdmin()` (`lib/api-auth.ts`).
-- Endpoints bajo `/api/superadmin/*` (protegidos), y `/reset-password` (página pública).
-- **Cuenta superadmin actual:** `medios.hekkoestudio@gmail.com` (se le quitó su perfil de mecánico del
-  taller "Formula Taller" para dejarla **solo como superadmin**). La contraseña se cambia con
-  `npm run set:superadmin-password`.
-
-**Órdenes y adjuntos:**
-- Adjuntos de creación **editables** en el resumen (agregar/eliminar) — `InitialAttachments`.
-- **Borrado de adjuntos por ruta** `.../attachments/[aid]` (antes `?id=`, que se perdía y daba
-  "Falta el id"). El **mecánico puede eliminar sus propias órdenes**.
-
-**Teléfonos:** selector de código de país (`PhoneInput`), Venezuela por defecto, formato internacional.
-
-**Service worker (PWA):** arreglada la **orden vacía al navegar** (los datos de navegación RSC ahora
-son *network-first*, antes se servían de caché) y se quitó la **recarga forzada** que podía abortar
-un borrado en curso. Caché en `formula-taller-v4`.
-
-**Scripts nuevos:** `seed:superadmin`, `set:superadmin-password` (usan `.env.local`, no llevan secretos).
-
-**Config manual pendiente:** agregar `https://formulataller.com/reset-password` en Supabase →
-Authentication → URL Configuration → **Redirect URLs** (para el enlace de restablecer por correo).
-
----
-
-## Pendientes y recomendaciones
-- 🔴 **Revocar el token de Vercel** que se compartió durante la configuración:
-  https://vercel.com/account/tokens
-- ✅ **Hecho:** compresión de imágenes en el navegador antes de subir (acelera subida y tracking).
-- 💡 **Opcional:** aumentar el límite de tamaño del bucket `stage-files` en Supabase si se
-  necesitan videos de más de 50MB (requiere plan de pago para superar el máximo por archivo).
-- 💡 Cambiar la **contraseña del admin** tras el primer login si no se ha hecho.
-- Para revisar consumo del plan Claude: comando `/usage`.
+- **La caché puede engañarte.** El service worker sirve contenido cacheado; tras un
+  deploy, si ves algo viejo, hay que desregistrarlo. Ver [`CACHE.md`](CACHE.md).
+- **El seguimiento del cliente no se cachea a propósito.** `tracking/[token]/page.tsx`
+  declara `dynamic = 'force-dynamic'` **y** `fetchCache = 'force-no-store'`. Sin el
+  segundo, Next.js cacheaba las consultas a Supabase (la página es pública, sin
+  cookies) y no aparecían los archivos recién subidos.
+- **Las etiquetas de servicio viven en un solo sitio:** `SERVICE_LABELS` en
+  `src/lib/types.ts`. Si agregas un valor al enum `service_type` en la base, agrégalo
+  también ahí o se romperá el `Record` tipado.
+- **Al crear un estratega, la app arma un mensaje de WhatsApp** con sus credenciales
+  (`buildCredentialsMessage` en `utils.ts`), para mandárselas de una vez.

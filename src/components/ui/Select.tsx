@@ -8,7 +8,7 @@ export interface SelectOption {
   label: string;
   /** Texto atenuado (ej. la opción "Sin asignar"). */
   muted?: boolean;
-  /** Opción de acción (ej. "Agregar mecánico"): destacada, con +, separada. */
+  /** Opción de acción (ej. "Agregar estratega"): destacada, con +, separada. */
   action?: boolean;
 }
 
@@ -29,7 +29,7 @@ interface SelectProps {
 /**
  * Desplegable con **lista propia** de la app (clases `.select-menu` /
  * `.select-option`) — NO el `<select>` nativo, que abre el picker del sistema.
- * Base reutilizable para cualquier selector de opciones (estado, mecánico, etc.).
+ * Base reutilizable para cualquier selector de opciones (estado, estratega, etc.).
  */
 export default function Select({
   options,

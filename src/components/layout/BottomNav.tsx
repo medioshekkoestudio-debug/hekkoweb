@@ -23,27 +23,27 @@ const ADMIN_NAV: NavItem[] = [
     icon: <ClipboardList size={22} />,
   },
   {
-    href: '/admin/mecanicos',
-    label: 'Mecánicos',
+    href: '/admin/estrategas',
+    label: 'Estrategas',
     icon: <Users size={22} />,
   },
   {
-    href: '/admin/taller',
-    label: 'Taller',
+    href: '/admin/empresa',
+    label: 'Empresa',
     icon: <Store size={22} />,
   },
 ];
 
 const MECHANIC_NAV: NavItem[] = [
   {
-    href: '/mecanico',
+    href: '/estratega',
     label: 'Mis Órdenes',
     icon: <ClipboardList size={22} />,
   },
 ];
 
 interface BottomNavProps {
-  role: 'admin' | 'mechanic';
+  role: 'admin' | 'strategist';
 }
 
 export default function BottomNav({ role }: BottomNavProps) {
@@ -71,7 +71,7 @@ export default function BottomNav({ role }: BottomNavProps) {
     >
       {items.map((item) => {
         const isActive =
-          item.href === '/admin' || item.href === '/mecanico'
+          item.href === '/admin' || item.href === '/estratega'
             ? pathname === item.href
             : pathname.startsWith(item.href);
 

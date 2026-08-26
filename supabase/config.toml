@@ -1,6 +1,6 @@
 # Supabase local/CI configuration.
 # Replace project_id with your linked project ref when running `supabase link`.
-project_id = "formula-taller"
+project_id = "hekko"
 
 [api]
 enabled = true
