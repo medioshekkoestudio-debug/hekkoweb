@@ -30,7 +30,7 @@ servicio, y los **clientes** hacen seguimiento del estado de su vehículo median
 | Proyecto Vercel | `formula-taller` (cuenta `somosformulataller`) |
 | Supabase (project ref) | `tsvaagakjkemavhdcroy` |
 | Dominio | `formulataller.com` (comprado en **Namecheap**, método A/CNAME) |
-| Correo del negocio | `somosformulataller@gmail.com` |
+| Correo del negocio | `medios.hekkoestudio@gmail.com` |
 
 **Auto-deploy:** cada `git push` a `main` en GitHub redespliega automáticamente en Vercel.
 
@@ -234,7 +234,7 @@ git push        # Vercel redespliega solo en ~1 min
   atención al cliente y **restablecer contraseña** (enlace por correo o contraseña temporal).
 - Identidad en tabla `platform_admins`. Helper `getPlatformAdmin()` (`lib/api-auth.ts`).
 - Endpoints bajo `/api/superadmin/*` (protegidos), y `/reset-password` (página pública).
-- **Cuenta superadmin actual:** `somosformulataller@gmail.com` (se le quitó su perfil de mecánico del
+- **Cuenta superadmin actual:** `medios.hekkoestudio@gmail.com` (se le quitó su perfil de mecánico del
   taller "Formula Taller" para dejarla **solo como superadmin**). La contraseña se cambia con
   `npm run set:superadmin-password`.
 

@@ -36,11 +36,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Facebook Conversions API relay: público (se dispara desde login/registro sin sesión).
-  if (pathname.startsWith('/api/fb-event')) {
-    return NextResponse.next();
-  }
-
   // Superadmin API: the route handlers enforce platform-admin auth themselves
   // (getPlatformAdmin). Don't run the workshop/profile logic here, and never
   // redirect an API request.

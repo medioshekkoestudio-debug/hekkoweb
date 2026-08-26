@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
-import FacebookPixel from '@/components/FacebookPixel';
 
 export const metadata: Metadata = {
   title: 'Formula Taller',
@@ -44,23 +43,6 @@ export default function RootLayout({
         />
       </head>
       <body>
-        {/* Meta Pixel: script inline garantizado (se sirve en el HTML y ejecuta al
-            cargar). Solo INICIALIZA el pixel. El PageView (inicial y en cada
-            navegación) lo dispara <FacebookPixel /> una sola vez por ruta, para
-            no duplicar el evento. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-              fbq('set','autoConfig',false,'1688453135751029');
-              fbq('init','1688453135751029');
-            `,
-          }}
-        />
-        {/* Sin fallback <noscript>: el navegador lo precargaba y, con JS activado,
-            nunca lo usaba (aviso "preloaded but not used"). El Pixel + la CAPI
-            cubren a todos los visitantes con JavaScript. */}
-        <FacebookPixel />
         {children}
         {/* Service Worker: register in production only. In development we
             actively unregister it and clear its caches, since a cache-first SW

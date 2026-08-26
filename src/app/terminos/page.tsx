@@ -58,7 +58,7 @@ export default function TerminosPage() {
       </p>
 
       <h2>8. Contacto</h2>
-      <p>Para dudas sobre estos Términos, escríbenos a somosformulataller@gmail.com.</p>
+      <p>Para dudas sobre estos Términos, escríbenos a medios.hekkoestudio@gmail.com.</p>
     </LegalPage>
   );
 }

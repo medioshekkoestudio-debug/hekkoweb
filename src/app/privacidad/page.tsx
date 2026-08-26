@@ -60,7 +60,7 @@ export default function PrivacidadPage() {
       <h2>8. Tus derechos y contacto</h2>
       <p>
         Puedes solicitar acceso, corrección o eliminación de tus datos escribiendo a
-        somosformulataller@gmail.com.
+        medios.hekkoestudio@gmail.com.
       </p>
     </LegalPage>
   );

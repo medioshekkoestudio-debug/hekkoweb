@@ -14,7 +14,7 @@ Referencia rápida de los comandos usados. Última actualización: **2026-07-03*
 ```bash
 npm run seed:superadmin -- <email> <password> ["Nombre"]
 # ej.
-npm run seed:superadmin -- somosformulataller@gmail.com "MiClave123" "Formula Taller"
+npm run seed:superadmin -- medios.hekkoestudio@gmail.com "MiClave123" "Formula Taller"
 ```
 - Si el correo ya existía, **solo lo marca como superadmin** (no cambia la contraseña).
 - La contraseña debe tener **mínimo 6 caracteres**.
@@ -23,7 +23,7 @@ npm run seed:superadmin -- somosformulataller@gmail.com "MiClave123" "Formula Ta
 ```bash
 npm run set:superadmin-password -- <email> <nueva_password>
 # ej.
-npm run set:superadmin-password -- somosformulataller@gmail.com "NuevaClave123"
+npm run set:superadmin-password -- medios.hekkoestudio@gmail.com "NuevaClave123"
 ```
 
 > Entrar al panel: `https://formulataller.com/superadmin/login` (o el login normal, que
@@ -78,11 +78,11 @@ select u.email, p.role, w.name as taller
 from auth.users u
 left join public.profiles p on p.id = u.id
 left join public.workshops w on w.id = p.workshop_id
-where u.email = 'somosformulataller@gmail.com';
+where u.email = 'medios.hekkoestudio@gmail.com';
 
 -- Quitar el perfil de taller de una cuenta (dejarla solo superadmin)
 delete from public.profiles p using auth.users u
-where p.id = u.id and u.email = 'somosformulataller@gmail.com';
+where p.id = u.id and u.email = 'medios.hekkoestudio@gmail.com';
 ```
 
 ---

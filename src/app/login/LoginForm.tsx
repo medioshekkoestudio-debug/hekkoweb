@@ -8,7 +8,6 @@ import { Wrench, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import InstallButton from '@/components/pwa/InstallButton';
-import { trackFbEventOnce, trackInteraccionFormulaTaller } from '@/lib/fbpixel';
 
 interface LoginFormProps {
   workshopName?: string;
@@ -27,8 +26,6 @@ export default function LoginForm({ workshopName, logoUrl }: LoginFormProps = {}
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    trackFbEventOnce('ClickIniciarSesion');
-    trackInteraccionFormulaTaller();
     setError(null);
     setLoading(true);
 
@@ -229,14 +226,6 @@ export default function LoginForm({ workshopName, logoUrl }: LoginFormProps = {}
           ¿No tienes taller registrado?{' '}
           <Link
             href="/registro"
-            onClick={(e) => {
-              // Disparar el evento y esperar ~400ms antes de navegar, para que
-              // la petición del Pixel (facebook.com/tr) no se cancele.
-              e.preventDefault();
-              trackFbEventOnce('ClickCrearTaller');
-              trackInteraccionFormulaTaller();
-              setTimeout(() => router.push('/registro'), 400);
-            }}
             style={{ color: 'var(--color-brand-400)', fontWeight: 700, textDecoration: 'none' }}
           >
             Crear taller

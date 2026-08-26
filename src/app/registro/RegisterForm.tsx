@@ -8,7 +8,6 @@ import { Wrench, Store, Mail, User, Lock } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import PhoneInput from '@/components/ui/PhoneInput';
-import { trackFbEventOnce, trackInteraccionFormulaTaller } from '@/lib/fbpixel';
 import type { RegisterWorkshopPayload } from '@/lib/types';
 
 export default function RegisterForm() {
@@ -34,9 +33,6 @@ export default function RegisterForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Click en "Registrar mi taller" (intención de terminar el registro).
-    trackFbEventOnce('ClickRegistrarTaller');
-    trackInteraccionFormulaTaller();
     setError(null);
 
     if (!accepted) {
