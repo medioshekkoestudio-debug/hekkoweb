@@ -50,9 +50,17 @@ marcado como público.
 
 ### 1.4 Configurar Auth
 
-**Authentication → Providers → Email**: deja habilitado email/contraseña y
-**desactiva "Confirm email"** — el admin crea las cuentas de los estrategas y deben
-poder entrar de inmediato.
+**Authentication → Sign In / Providers → Email**:
+
+- Deja habilitado **email/contraseña**.
+- **Desactiva "Allow new users to sign up"** (registros públicos). ⚠️ Es importante:
+  el trigger `handle_new_user` toma el rol del `user_metadata` que manda quien se
+  registra, así que con los registros abiertos cualquiera podría crearse una cuenta
+  de **admin** usando solo la llave `anon`, que es pública.
+  Esto **no** afecta a la app: el admin crea los estrategas con la Admin API
+  (service role), que sigue funcionando con los registros cerrados.
+- "Confirm email" puede quedarse como esté: tanto `npm run seed:admin` como
+  `/api/strategists` crean las cuentas con `email_confirm: true`.
 
 ---
 
