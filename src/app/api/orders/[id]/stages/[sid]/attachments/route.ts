@@ -90,39 +90,6 @@ export async function POST(req: Request, { params }: Params) {
   return NextResponse.json(data, { status: 201 });
 }
 
-// DELETE /api/orders/:id/stages/:sid/attachments?id=<attachmentId>
-export async function DELETE(req: Request, { params }: Params) {
-  const caller = await getCaller();
-  if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!(await canManageOrder(caller, params.id))) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
-  const attachmentId = new URL(req.url).searchParams.get('id');
-  if (!attachmentId) {
-    return NextResponse.json({ error: 'Falta el id del adjunto' }, { status: 400 });
-  }
-
-  const service = createServiceClient();
-
-  const { data: att } = await service
-    .from('stage_attachments')
-    .select('path')
-    .eq('id', attachmentId)
-    .eq('stage_id', params.sid)
-    .single();
-
-  const path = (att as unknown as { path: string } | null)?.path;
-  if (path) {
-    await service.storage.from(BUCKET).remove([path]);
-  }
-
-  const { error } = await service
-    .from('stage_attachments')
-    .delete()
-    .eq('id', attachmentId)
-    .eq('stage_id', params.sid);
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return new NextResponse(null, { status: 204 });
-}
+// El borrado de un adjunto vive en .../attachments/[aid] (el id va en la ruta).
+// Aquí había un DELETE que leía ?id=...: en producción el query string se pierde
+// y siempre respondía 400 "Falta el id del adjunto". La app no lo usaba.

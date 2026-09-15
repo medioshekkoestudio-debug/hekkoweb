@@ -5,6 +5,8 @@ import { getCaller, canManageOrder } from '@/lib/api-auth';
 
 type Params = { params: { id: string; sid: string } };
 
+const BUCKET = 'stage-files';
+
 // PATCH /api/orders/:id/stages/:sid
 export async function PATCH(req: Request, { params }: Params) {
   const service = createServiceClient();
@@ -45,6 +47,17 @@ export async function DELETE(_: Request, { params }: Params) {
   if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!(await canManageOrder(caller, params.id))) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  // Igual que al borrar la orden: la cascada limpia las filas, no los archivos.
+  const { data: atts } = await service
+    .from('stage_attachments')
+    .select('path')
+    .eq('stage_id', params.sid);
+
+  const paths = ((atts ?? []) as unknown as { path: string }[]).map((a) => a.path);
+  if (paths.length > 0) {
+    await service.storage.from(BUCKET).remove(paths);
   }
 
   const { error } = await service

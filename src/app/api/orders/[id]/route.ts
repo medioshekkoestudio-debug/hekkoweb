@@ -11,6 +11,8 @@ const ORDER_SELECT = `
   stages:order_stages(*)
 `;
 
+const BUCKET = 'stage-files';
+
 // GET /api/orders/:id
 export async function GET(_: Request, { params }: Params) {
   const caller = await getCaller();
@@ -67,6 +69,20 @@ export async function DELETE(_: Request, { params }: Params) {
   }
 
   const service = createServiceClient();
+
+  // Borrar primero los archivos de Storage. El borrado en cascada de la base
+  // solo alcanza a las filas (order_stages / stage_attachments): si no los
+  // quitamos aquí, los archivos quedan huérfanos en el bucket para siempre.
+  const { data: atts } = await service
+    .from('stage_attachments')
+    .select('path')
+    .eq('order_id', params.id);
+
+  const paths = ((atts ?? []) as unknown as { path: string }[]).map((a) => a.path);
+  if (paths.length > 0) {
+    await service.storage.from(BUCKET).remove(paths);
+  }
+
   const { error } = await service.from('orders').delete().eq('id', params.id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
