@@ -68,17 +68,14 @@ export default async function TrackingPage({ params }: Props) {
       `)
       .eq('public_token', params.token)
       .maybeSingle(),
-    service.from('company_settings').select('name, logo_url').eq('id', 1).maybeSingle(),
+    service.from('company_settings').select('name').eq('id', 1).maybeSingle(),
   ]);
 
   const rawData = orderRes.data;
   if (!rawData) notFound();
 
   const rawOrder = rawData as unknown as Order & { stages: OrderStage[] };
-  const company = companyRes.data as unknown as Pick<
-    CompanySettings,
-    'name' | 'logo_url'
-  > | null;
+  const company = companyRes.data as unknown as Pick<CompanySettings, 'name'> | null;
 
   // Ordenar las etapas por posición.
   const sortedStages = (rawOrder.stages ?? []).sort(
@@ -89,7 +86,6 @@ export default async function TrackingPage({ params }: Props) {
     <TrackingClient
       order={{ ...rawOrder, stages: sortedStages }}
       companyName={company?.name ?? 'Hekko'}
-      companyLogo={company?.logo_url ?? null}
     />
   );
 }

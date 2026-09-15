@@ -7,19 +7,19 @@ export const metadata: Metadata = {
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'black-translucent',
+    statusBarStyle: 'default',
     title: 'Hekko',
   },
   icons: {
     icon: '/icons/icon-192.png',
-    apple: '/icons/icon-192.png',
+    apple: '/icons/apple-touch-icon.png',
   },
   keywords: ['marketing', 'diseño gráfico', 'desarrollo web', 'proyectos', 'seguimiento'],
   robots: 'noindex',
 };
 
 export const viewport: Viewport = {
-  themeColor: '#F59E0B',
+  themeColor: '#0D667A',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,

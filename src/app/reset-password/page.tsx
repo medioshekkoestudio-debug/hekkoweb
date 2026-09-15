@@ -85,7 +85,7 @@ export default function ResetPasswordPage() {
         justifyContent: 'center',
         padding: '24px 20px',
         background:
-          'radial-gradient(ellipse at top, rgba(245,158,11,0.08) 0%, transparent 60%), var(--color-bg)',
+          'radial-gradient(ellipse at top, rgba(43,161,183,0.14) 0%, transparent 60%), var(--color-bg)',
       }}
     >
       <div
@@ -96,15 +96,15 @@ export default function ResetPasswordPage() {
           style={{
             width: 64,
             height: 64,
-            background: 'linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700))',
+            background: 'var(--gradient-dark)',
             borderRadius: 18,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 8px 32px rgba(245,158,11,0.35)',
+            boxShadow: '0 8px 32px rgba(13,102,122,0.3)',
           }}
         >
-          <ShieldCheck size={32} color="#0D0F1A" strokeWidth={2.5} />
+          <ShieldCheck size={32} color="#fff" strokeWidth={2.5} />
         </div>
         <h1 style={{ fontSize: 22, fontWeight: 800 }}>Restablecer contraseña</h1>
       </div>
@@ -112,7 +112,7 @@ export default function ResetPasswordPage() {
       <div className="card animate-slide-up glass" style={{ width: '100%', maxWidth: 400, padding: 28 }}>
         {done ? (
           <div style={{ textAlign: 'center' }}>
-            <CheckCircle2 size={40} color="#34d399" style={{ margin: '0 auto 12px' }} />
+            <CheckCircle2 size={40} color="var(--color-success-text)" style={{ margin: '0 auto 12px' }} />
             <p style={{ fontWeight: 700, marginBottom: 6 }}>¡Contraseña actualizada!</p>
             <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
               Te llevamos al inicio de sesión...
@@ -178,7 +178,7 @@ export default function ResetPasswordPage() {
             </div>
 
             {error && (
-              <div style={{ padding: '10px 14px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, color: '#f87171', fontSize: 13 }}>
+              <div style={{ padding: '10px 14px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, color: 'var(--color-danger-text)', fontSize: 13 }}>
                 {error}
               </div>
             )}

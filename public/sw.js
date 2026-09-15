@@ -4,12 +4,15 @@
 // change on every build; the browser's HTTP cache handles them. Caching them
 // here would serve stale chunks after a rebuild and break the whole page.
 
-const CACHE_NAME = 'hekko-v1';
+// Subir la versión al cambiar logo o íconos: el cache-first los serviría viejos.
+const CACHE_NAME = 'hekko-v2';
 const STATIC_ASSETS = [
   '/login',
   '/manifest.webmanifest',
+  '/brand/hekko-logo.png',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
+  '/icons/apple-touch-icon.png',
 ];
 
 // Install: cache core assets

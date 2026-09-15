@@ -34,7 +34,7 @@ const ADMIN_NAV: NavItem[] = [
   },
 ];
 
-const MECHANIC_NAV: NavItem[] = [
+const STRATEGIST_NAV: NavItem[] = [
   {
     href: '/estratega',
     label: 'Mis Órdenes',
@@ -48,7 +48,7 @@ interface BottomNavProps {
 
 export default function BottomNav({ role }: BottomNavProps) {
   const pathname = usePathname();
-  const items = role === 'admin' ? ADMIN_NAV : MECHANIC_NAV;
+  const items = role === 'admin' ? ADMIN_NAV : STRATEGIST_NAV;
 
   return (
     <nav
@@ -58,7 +58,7 @@ export default function BottomNav({ role }: BottomNavProps) {
         left: 0,
         right: 0,
         height: 'var(--bottom-nav-height)',
-        background: 'rgba(13,15,26,0.95)',
+        background: 'rgba(255,255,255,0.95)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
         borderTop: '1px solid var(--color-border)',

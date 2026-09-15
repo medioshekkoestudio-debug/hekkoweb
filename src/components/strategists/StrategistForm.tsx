@@ -126,7 +126,7 @@ export default function StrategistForm({
             display: 'flex',
             alignItems: 'center',
             gap: 8,
-            color: '#34d399',
+            color: 'var(--color-success-text)',
             fontWeight: 700,
             fontSize: 15,
           }}
@@ -181,7 +181,7 @@ export default function StrategistForm({
               gap: 6,
               padding: '8px 14px',
               background: 'rgba(37,211,102,0.12)',
-              color: '#25D366',
+              color: 'var(--color-whatsapp-text)',
               borderRadius: 8,
               fontSize: 13,
               fontWeight: 600,
@@ -211,7 +211,7 @@ export default function StrategistForm({
             background: 'rgba(52,211,153,0.1)',
             border: '1px solid rgba(52,211,153,0.25)',
             borderRadius: 8,
-            color: '#34d399',
+            color: 'var(--color-success-text)',
             fontSize: 13,
           }}
         >
@@ -263,7 +263,7 @@ export default function StrategistForm({
             background: 'rgba(239,68,68,0.1)',
             border: '1px solid rgba(239,68,68,0.2)',
             borderRadius: 8,
-            color: '#f87171',
+            color: 'var(--color-danger-text)',
             fontSize: 13,
           }}
         >

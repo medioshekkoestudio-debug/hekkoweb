@@ -91,13 +91,13 @@ export default function AdminDashboardClient({
           icon={<Loader size={18} />}
           label="En progreso"
           value={stats.con_estratega}
-          color="#fbbf24"
+          color="var(--color-warning-text)"
         />
         <StatCard
           icon={<CheckCircle2 size={18} />}
           label="Entregadas"
           value={stats.entregada}
-          color="#34d399"
+          color="var(--color-success-text)"
         />
       </div>
 
@@ -146,7 +146,7 @@ export default function AdminDashboardClient({
                   : 'var(--color-surface-2)',
               color:
                 filter === f.value
-                  ? '#0D0F1A'
+                  ? '#fff'
                   : 'var(--color-text-secondary)',
               borderColor:
                 filter === f.value
@@ -234,7 +234,7 @@ function StatCard({
           width: 38,
           height: 38,
           borderRadius: 10,
-          background: `${color}15`,
+          background: `color-mix(in srgb, ${color} 12%, transparent)`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

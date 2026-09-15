@@ -117,7 +117,7 @@ export default function StrategistCard({
               background: strategist.active
                 ? 'rgba(16,185,129,0.12)'
                 : 'rgba(100,100,100,0.12)',
-              color: strategist.active ? '#34d399' : 'var(--color-text-muted)',
+              color: strategist.active ? 'var(--color-success-text)' : 'var(--color-text-muted)',
             }}
           >
             {strategist.active ? 'Activo' : 'Inactivo'}
@@ -133,7 +133,7 @@ export default function StrategistCard({
                 gap: 6,
                 padding: '8px 14px',
                 background: 'rgba(37,211,102,0.12)',
-                color: '#25D366',
+                color: 'var(--color-whatsapp-text)',
                 borderRadius: 8,
                 fontSize: 13,
                 fontWeight: 600,

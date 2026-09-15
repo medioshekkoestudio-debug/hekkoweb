@@ -1,33 +1,25 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Building2,
-  CheckCircle2,
-  Loader2,
-  Image as ImageIcon,
-} from 'lucide-react';
+import { Building2, CheckCircle2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import PhoneInput from '@/components/ui/PhoneInput';
-import { compressImage } from '@/lib/image';
+import HekkoLogo from '@/components/brand/HekkoLogo';
 import type { CompanySettings } from '@/lib/types';
 
 /**
- * Perfil de la empresa: nombre, logo y WhatsApp de Hekko. El nombre y el logo
- * se muestran en el panel (TopBar) y en el seguimiento que ven los clientes.
+ * Perfil de la empresa: nombre y WhatsApp de Hekko. El logo es fijo (viene en
+ * la app, ver components/brand/HekkoLogo) y no se sube desde aquí.
  */
 export default function EmpresaClient({ company }: { company: CompanySettings }) {
   const router = useRouter();
   const [name, setName] = useState(company.name);
   const [whatsapp, setWhatsapp] = useState(company.whatsapp ?? '');
-  const [logoUrl, setLogoUrl] = useState(company.logo_url);
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const logoInputRef = useRef<HTMLInputElement>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,94 +45,20 @@ export default function EmpresaClient({ company }: { company: CompanySettings })
     router.refresh();
   }
 
-  async function handleLogo(e: React.ChangeEvent<HTMLInputElement>) {
-    const original = e.target.files?.[0];
-    e.target.value = '';
-    if (!original) return;
-    setError(null);
-    setUploading(true);
-    try {
-      const file = await compressImage(original);
-      const fd = new FormData();
-      fd.append('file', file);
-      const res = await fetch('/api/company/logo', { method: 'POST', body: fd });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'No se pudo subir el logo.');
-      }
-      const updated = (await res.json()) as CompanySettings;
-      setLogoUrl(updated.logo_url);
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo subir el logo.');
-    } finally {
-      setUploading(false);
-    }
-  }
-
   return (
     <div style={{ maxWidth: 480, margin: '0 auto' }}>
       <h1 style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>Perfil de la empresa</h1>
       <p style={{ color: 'var(--color-text-secondary)', fontSize: 13, marginBottom: 20 }}>
-        El nombre y el logo aparecen en tu panel y en el seguimiento que ven tus clientes.
+        El nombre aparece en el seguimiento que ven tus clientes.
       </p>
 
       {/* Logo */}
       <div className="card" style={{ padding: 24, marginBottom: 16 }}>
         <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>Logo</p>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div
-            style={{
-              width: 72,
-              height: 72,
-              borderRadius: 14,
-              border: '1px solid var(--color-border)',
-              background: 'var(--color-surface-2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
-              flexShrink: 0,
-            }}
-          >
-            {logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={logoUrl}
-                alt="Logo de la empresa"
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            ) : (
-              <ImageIcon size={26} color="var(--color-text-muted)" />
-            )}
-          </div>
-
-          <div style={{ flex: 1 }}>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => logoInputRef.current?.click()}
-              disabled={uploading}
-            >
-              {uploading ? (
-                <Loader2 size={14} style={{ animation: 'spin 0.8s linear infinite' }} />
-              ) : (
-                <ImageIcon size={14} />
-              )}
-              {uploading ? 'Subiendo...' : logoUrl ? 'Cambiar logo' : 'Subir logo'}
-            </Button>
-            <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 8 }}>
-              Imagen cuadrada (PNG o JPG). Se optimiza automáticamente.
-            </p>
-            <input
-              ref={logoInputRef}
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={handleLogo}
-            />
-          </div>
-        </div>
+        <HekkoLogo height={48} />
+        <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 10 }}>
+          El logo oficial de Hekko viene integrado en la app.
+        </p>
       </div>
 
       {/* Datos de la empresa */}
@@ -175,7 +93,7 @@ export default function EmpresaClient({ company }: { company: CompanySettings })
                 background: 'rgba(239,68,68,0.1)',
                 border: '1px solid rgba(239,68,68,0.2)',
                 borderRadius: 8,
-                color: '#f87171',
+                color: 'var(--color-danger-text)',
                 fontSize: 13,
               }}
             >
@@ -193,7 +111,7 @@ export default function EmpresaClient({ company }: { company: CompanySettings })
                 background: 'rgba(16,185,129,0.1)',
                 border: '1px solid rgba(16,185,129,0.25)',
                 borderRadius: 8,
-                color: '#34d399',
+                color: 'var(--color-success-text)',
                 fontSize: 13,
                 fontWeight: 600,
               }}

@@ -3,13 +3,13 @@
 import type { Order, OrderStage, StageStatus, OrderStatus } from '@/lib/types';
 import { SERVICE_LABELS } from '@/lib/types';
 import { formatDate, ORDER_STATUS_LABELS } from '@/lib/utils';
-import { CheckCircle2, Circle, Loader2, Briefcase, Tag, UserRound, Clock, Sparkles } from 'lucide-react';
+import { CheckCircle2, Circle, Loader2, Briefcase, Tag, UserRound, Clock } from 'lucide-react';
 import AttachmentGallery from '@/components/orders/AttachmentGallery';
+import HekkoLogo from '@/components/brand/HekkoLogo';
 
 interface TrackingClientProps {
   order: Order;
   companyName: string;
-  companyLogo: string | null;
 }
 
 const STAGE_ICONS: Record<StageStatus, React.ReactNode> = {
@@ -20,28 +20,28 @@ const STAGE_ICONS: Record<StageStatus, React.ReactNode> = {
         width: 22,
         height: 22,
         borderRadius: '50%',
-        border: '3px solid #f59e0b',
+        border: '3px solid #F6A00C',
         borderTopColor: 'transparent',
         animation: 'spin 1.2s linear infinite',
       }}
     />
   ),
-  pending: <Circle size={22} color="rgba(255,255,255,0.15)" />,
+  pending: <Circle size={22} color="rgba(3,33,43,0.2)" />,
 };
 
 const STATUS_BG: Record<OrderStatus, string> = {
-  sin_estratega: 'rgba(255,255,255,0.06)',
-  con_estratega: 'rgba(245,158,11,0.1)',
+  sin_estratega: 'rgba(3,33,43,0.04)',
+  con_estratega: 'rgba(246,160,12,0.12)',
   entregada: 'rgba(16,185,129,0.1)',
 };
 
 const STATUS_COLOR: Record<OrderStatus, string> = {
   sin_estratega: 'var(--color-text-secondary)',
-  con_estratega: '#fbbf24',
-  entregada: '#34d399',
+  con_estratega: 'var(--color-warning-text)',
+  entregada: 'var(--color-success-text)',
 };
 
-export default function TrackingClient({ order, companyName, companyLogo }: TrackingClientProps) {
+export default function TrackingClient({ order, companyName }: TrackingClientProps) {
   const allStages = (order.stages ?? []) as OrderStage[];
   // La posición 0 son los materiales que el cliente entregó al abrir la orden:
   // es información base del proyecto, no una etapa del seguimiento.
@@ -58,7 +58,7 @@ export default function TrackingClient({ order, companyName, companyLogo }: Trac
     <div
       style={{
         minHeight: '100dvh',
-        background: 'radial-gradient(ellipse at top, rgba(245,158,11,0.06) 0%, transparent 50%), var(--color-bg)',
+        background: 'radial-gradient(ellipse at top, rgba(43,161,183,0.12) 0%, transparent 50%), var(--color-bg)',
         padding: '24px 16px',
         maxWidth: 480,
         margin: '0 auto',
@@ -69,41 +69,14 @@ export default function TrackingClient({ order, companyName, companyLogo }: Trac
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 10,
+          gap: 12,
           marginBottom: 28,
         }}
       >
-        <div
-          style={{
-            width: 38,
-            height: 38,
-            background: companyLogo
-              ? 'var(--color-surface-2)'
-              : 'linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700))',
-            borderRadius: 10,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-          }}
-        >
-          {companyLogo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={companyLogo}
-              alt={companyName}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          ) : (
-            <Sparkles size={20} color="#0D0F1A" strokeWidth={2.5} />
-          )}
-        </div>
-        <div>
-          <p style={{ fontWeight: 700, fontSize: 15, lineHeight: 1 }}>{companyName}</p>
-          <p style={{ fontSize: 11, color: 'var(--color-text-muted)', lineHeight: 1, marginTop: 2 }}>
-            Seguimiento de tu proyecto
-          </p>
-        </div>
+        <HekkoLogo height={32} />
+        <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.2 }}>
+          Seguimiento de tu proyecto
+        </p>
       </div>
 
       {/* Status banner */}
@@ -111,7 +84,7 @@ export default function TrackingClient({ order, companyName, companyLogo }: Trac
         className="animate-fade-in"
         style={{
           background: STATUS_BG[order.status],
-          border: `1px solid ${STATUS_COLOR[order.status]}30`,
+          border: `1px solid color-mix(in srgb, ${STATUS_COLOR[order.status]} 30%, transparent)`,
           borderRadius: 14,
           padding: '14px 18px',
           marginBottom: 16,
@@ -129,7 +102,7 @@ export default function TrackingClient({ order, companyName, companyLogo }: Trac
             boxShadow: order.status === 'entregada'
               ? '0 0 0 4px rgba(16,185,129,0.2)'
               : order.status === 'con_estratega'
-              ? '0 0 0 4px rgba(245,158,11,0.2)'
+              ? '0 0 0 4px rgba(246,160,12,0.2)'
               : 'none',
             animation: order.status !== 'sin_estratega' ? 'pulse-glow 2s ease-in-out infinite' : 'none',
             flexShrink: 0,
@@ -146,7 +119,7 @@ export default function TrackingClient({ order, companyName, companyLogo }: Trac
             {order.status === 'entregada'
               ? '¡Tu proyecto está listo! 🎉'
               : order.status === 'con_estratega'
-              ? 'En servicio 🔧'
+              ? 'En proceso 🚀'
               : 'En espera de estratega'}
           </p>
           <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>
@@ -155,7 +128,7 @@ export default function TrackingClient({ order, companyName, companyLogo }: Trac
         </div>
       </div>
 
-      {/* Vehicle info card */}
+      {/* Información del proyecto */}
       <div
         className="card animate-fade-in"
         style={{ marginBottom: 16, animationDelay: '0.05s' }}
@@ -232,7 +205,7 @@ export default function TrackingClient({ order, companyName, companyLogo }: Trac
               background:
                 progress === 100
                   ? 'linear-gradient(90deg, #10b981, #34d399)'
-                  : 'linear-gradient(90deg, var(--color-brand-600), var(--color-brand-400))',
+                  : 'linear-gradient(90deg, var(--color-brand-500), var(--color-turquoise))',
               borderRadius: 4,
               transition: 'width 0.6s ease',
             }}
@@ -302,13 +275,13 @@ export default function TrackingClient({ order, companyName, companyLogo }: Trac
                       stage.status === 'done'
                         ? 'rgba(16,185,129,0.06)'
                         : stage.status === 'in_progress'
-                        ? 'rgba(245,158,11,0.06)'
+                        ? 'rgba(246,160,12,0.08)'
                         : 'var(--color-surface)',
                     border: `1px solid ${
                       stage.status === 'done'
-                        ? 'rgba(16,185,129,0.15)'
+                        ? 'rgba(16,185,129,0.2)'
                         : stage.status === 'in_progress'
-                        ? 'rgba(245,158,11,0.2)'
+                        ? 'rgba(246,160,12,0.35)'
                         : 'var(--color-border)'
                     }`,
                     borderRadius: 10,
@@ -348,7 +321,7 @@ export default function TrackingClient({ order, companyName, companyLogo }: Trac
                     <p
                       style={{
                         fontSize: 12,
-                        color: '#fbbf24',
+                        color: 'var(--color-warning-text)',
                         marginTop: 4,
                         display: 'flex',
                         alignItems: 'center',
@@ -399,7 +372,7 @@ export default function TrackingClient({ order, companyName, companyLogo }: Trac
           }}
         >
           <p style={{ fontSize: 24, marginBottom: 8 }}>🎉</p>
-          <p style={{ fontWeight: 700, fontSize: 16, color: '#34d399' }}>
+          <p style={{ fontWeight: 700, fontSize: 16, color: 'var(--color-success-text)' }}>
             ¡Tu proyecto está listo!
           </p>
           <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 6 }}>

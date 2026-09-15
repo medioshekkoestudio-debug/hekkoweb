@@ -132,7 +132,7 @@ export default function OrdenesClient({
                   ? 'var(--color-brand-500)'
                   : 'var(--color-surface-2)',
               color:
-                filter === f.value ? '#0D0F1A' : 'var(--color-text-secondary)',
+                filter === f.value ? '#fff' : 'var(--color-text-secondary)',
               borderColor:
                 filter === f.value
                   ? 'var(--color-brand-500)'

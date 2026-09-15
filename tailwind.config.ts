@@ -8,19 +8,23 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Paleta Hekko 2026 — mantener en sincronía con globals.css
         brand: {
-          50: '#fffbeb',
-          100: '#fef3c7',
-          200: '#fde68a',
-          300: '#fcd34d',
-          400: '#fbbf24',
-          500: '#f59e0b',
-          600: '#d97706',
-          700: '#b45309',
-          800: '#92400e',
-          900: '#78350f',
-          950: '#451a03',
+          50: '#e8f4f6',
+          100: '#c9e6ec',
+          200: '#9acfda',
+          300: '#5fb6c6',
+          400: '#1a8196',
+          500: '#0D667A',
+          600: '#0a5264',
+          700: '#083f4d',
+          800: '#052d38',
+          900: '#03212B',
+          950: '#021820',
         },
+        accent: '#F6A00C',
+        turquoise: '#2BA1B7',
+        'warm-gray': '#D8D4D3',
         ink: {
           50: '#f6f6f7',
           100: '#e2e2e6',

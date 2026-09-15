@@ -45,6 +45,30 @@ sin instalar nada.
 
 ---
 
+## Marca
+
+- **Logo:** `public/brand/hekko-logo.png` (original en `src/img2/Logo-Hekko-Estudio-large.png`).
+  Se pinta con el componente `src/components/brand/HekkoLogo.tsx` en el TopBar, el login,
+  el seguimiento del cliente y `/admin/empresa`. Es fijo: ya no se sube desde el panel.
+- **Íconos de la PWA:** `public/icons/` (normales, `maskable` y `apple-touch-icon`),
+  generados a partir del logo sobre el degradado oscuro.
+- **Paleta 2026** (`src/img2/Pale colores Hekko 2026.docx`) — regla **80% blanco / 20% color**:
+
+  | Color | Uso | Token |
+  |---|---|---|
+  | `#0D667A` azul petróleo | Primario: botones, activos, tema del navegador | `--color-brand-500` |
+  | `#F6A00C` naranja | Acento: etapas en proceso | `--color-accent` |
+  | `#2BA1B7` turquesa | Foco de inputs, barra de progreso | `--color-turquoise` |
+  | `#D8D4D3` gris cálido | Complementario | `--color-warm-gray` |
+  | `#03212B` azul casi negro | Texto principal | `--color-brand-900` |
+
+  Degradados: oscuro `#0D667A → #03212B` (`--gradient-dark`), claro `#D8D4D3 → #2BA1B7`
+  (`--gradient-light`). Los tokens viven en `globals.css` y se repiten en `tailwind.config.ts`.
+- Si cambias el logo o los íconos, **sube `CACHE_NAME` en `public/sw.js`**: el service
+  worker los sirve cache-first.
+
+---
+
 ## Los tres accesos
 
 | Rol | Ruta | Puede |
@@ -62,7 +86,7 @@ No hay registro público: las cuentas del equipo las crea el administrador desde
 
 | Tabla | Para qué |
 |---|---|
-| `company_settings` | Marca de Hekko: nombre, logo, WhatsApp. **Fila única `id = 1`.** |
+| `company_settings` | Nombre y WhatsApp de Hekko. **Fila única `id = 1`.** (`logo_url` queda sin uso: el logo es fijo, ver *Marca*.) |
 | `profiles` | Usuarios del equipo (nombre, teléfono, rol, activo). `id` = `auth.users.id`. El correo vive en `auth.users`. |
 | `orders` | Órdenes de cliente: cliente, WhatsApp, `service_type`, `project_name`, estratega asignado, estado, `public_token` único para el seguimiento. |
 | `order_stages` | Etapas de cada orden (nombre, descripción, estado, posición). |

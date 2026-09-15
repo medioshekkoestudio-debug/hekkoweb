@@ -24,7 +24,7 @@ interface StageTimelineProps {
 
 const STATUS_ICONS: Record<StageStatus, React.ReactNode> = {
   done: <CheckCircle2 size={20} color="#10b981" />,
-  in_progress: <Loader2 size={20} color="#f59e0b" style={{ animation: 'spin 1.5s linear infinite' }} />,
+  in_progress: <Loader2 size={20} color="#F6A00C" style={{ animation: 'spin 1.5s linear infinite' }} />,
   pending: <Circle size={20} color="var(--color-text-muted)" />,
 };
 
@@ -350,13 +350,13 @@ export default function StageTimeline({
                     background: stage.status === 'done'
                       ? 'rgba(16,185,129,0.06)'
                       : stage.status === 'in_progress'
-                      ? 'rgba(245,158,11,0.06)'
+                      ? 'rgba(246,160,12,0.06)'
                       : 'var(--color-surface)',
                     border: `1px solid ${
                       stage.status === 'done'
                         ? 'rgba(16,185,129,0.15)'
                         : stage.status === 'in_progress'
-                        ? 'rgba(245,158,11,0.2)'
+                        ? 'rgba(246,160,12,0.2)'
                         : 'var(--color-border)'
                     }`,
                     borderRadius: 10,
@@ -567,7 +567,7 @@ export default function StageTimeline({
                               borderRadius: 8,
                               fontSize: 12,
                               fontWeight: 600,
-                              color: '#25D366',
+                              color: 'var(--color-whatsapp-text)',
                               cursor: 'pointer',
                             }}
                           >
@@ -588,7 +588,7 @@ export default function StageTimeline({
                               background: 'rgba(239,68,68,0.1)',
                               border: '1px solid rgba(239,68,68,0.25)',
                               borderRadius: 6,
-                              color: '#f87171',
+                              color: 'var(--color-danger-text)',
                               cursor: 'pointer',
                               padding: 6,
                               display: 'flex',

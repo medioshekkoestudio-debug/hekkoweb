@@ -4,17 +4,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { Sparkles, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import InstallButton from '@/components/pwa/InstallButton';
+import HekkoLogo from '@/components/brand/HekkoLogo';
 
-interface LoginFormProps {
-  companyName?: string;
-  logoUrl?: string | null;
-}
-
-export default function LoginForm({ companyName, logoUrl }: LoginFormProps = {}) {
+export default function LoginForm() {
   const router = useRouter();
   const supabase = createClient();
 
@@ -63,48 +59,20 @@ export default function LoginForm({ companyName, logoUrl }: LoginFormProps = {})
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px 20px',
-        background: 'radial-gradient(ellipse at top, rgba(245,158,11,0.08) 0%, transparent 60%), var(--color-bg)',
+        background: 'radial-gradient(ellipse at top, rgba(43,161,183,0.14) 0%, transparent 60%), var(--color-bg)',
       }}
     >
       {/* Logo */}
       <div
         className="animate-slide-up"
-        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, marginBottom: 40 }}
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, marginBottom: 36 }}
       >
-        <div
-          style={{
-            width: 72,
-            height: 72,
-            background: logoUrl
-              ? 'var(--color-surface-2)'
-              : 'linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700))',
-            borderRadius: 20,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 8px 32px rgba(245,158,11,0.35)',
-            overflow: 'hidden',
-          }}
-        >
-          {logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={logoUrl}
-              alt={companyName || 'Logo'}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          ) : (
-            <Sparkles size={36} color="#0D0F1A" strokeWidth={2.5} />
-          )}
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.02em' }}>
-            {companyName || 'Hekko'}
-          </h1>
-          <p style={{ color: 'var(--color-text-secondary)', marginTop: 4, fontSize: 14 }}>
-            Seguimiento de proyectos
-          </p>
-        </div>
+        <h1 style={{ margin: 0 }}>
+          <HekkoLogo height={56} />
+        </h1>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>
+          Seguimiento de proyectos
+        </p>
       </div>
 
       {/* Card */}
@@ -188,7 +156,7 @@ export default function LoginForm({ companyName, logoUrl }: LoginFormProps = {})
                 background: 'rgba(239,68,68,0.1)',
                 border: '1px solid rgba(239,68,68,0.2)',
                 borderRadius: 8,
-                color: '#f87171',
+                color: 'var(--color-danger-text)',
                 fontSize: 13,
               }}
             >

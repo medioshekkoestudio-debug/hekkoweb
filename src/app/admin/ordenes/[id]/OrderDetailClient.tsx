@@ -238,7 +238,7 @@ export default function OrderDetailClient({
               gap: 6,
               padding: '8px 14px',
               background: 'rgba(37,211,102,0.12)',
-              color: '#25D366',
+              color: 'var(--color-whatsapp-text)',
               borderRadius: 8,
               fontSize: 13,
               fontWeight: 600,

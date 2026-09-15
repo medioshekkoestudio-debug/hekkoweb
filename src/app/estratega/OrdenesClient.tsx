@@ -143,7 +143,7 @@ export default function EstrategaOrdenesClient({
               transition: 'all 0.15s',
               background:
                 filter === f.value ? 'var(--color-brand-500)' : 'var(--color-surface-2)',
-              color: filter === f.value ? '#0D0F1A' : 'var(--color-text-secondary)',
+              color: filter === f.value ? '#fff' : 'var(--color-text-secondary)',
               borderColor:
                 filter === f.value ? 'var(--color-brand-500)' : 'var(--color-border)',
             }}

@@ -189,7 +189,7 @@ function Option({
           width: 38,
           height: 38,
           borderRadius: 8,
-          background: 'rgba(245,158,11,0.12)',
+          background: 'rgba(246,160,12,0.12)',
           color: 'var(--color-brand-400)',
           flexShrink: 0,
         }}
