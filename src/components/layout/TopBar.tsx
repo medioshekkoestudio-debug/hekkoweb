@@ -20,8 +20,6 @@ export default function TopBar({ profile }: TopBarProps) {
     router.replace('/login');
   }
 
-  const firstName = profile.full_name?.split(' ')[0] ?? '';
-
   return (
     <header
       style={{
@@ -46,45 +44,20 @@ export default function TopBar({ profile }: TopBarProps) {
       {/* Logo + rol */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
         <HekkoLogo height={26} />
-        <span
-          style={{
-            fontSize: 10.5,
-            fontWeight: 700,
-            letterSpacing: '0.07em',
-            textTransform: 'uppercase',
-            color: 'var(--color-brand-500)',
-            background: 'var(--color-brand-50)',
-            border: '1px solid var(--color-brand-100)',
-            borderRadius: 999,
-            padding: '3px 9px',
-            whiteSpace: 'nowrap',
-            flexShrink: 0,
-          }}
-        >
-          {profile.role === 'admin' ? 'Administrador' : 'Estratega'}
+        <span className="topbar-role">
+          {profile.role === 'admin' ? 'Admin' : 'Estratega'}
         </span>
       </div>
 
-      {/* Nombre + avatar + salir */}
+      {/* Avatar + salir. Sin el nombre escrito: el avatar ya identifica
+          quién tiene la sesión abierta y deja sitio al logo. */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-        <span
-          style={{
-            fontSize: 13,
-            fontWeight: 600,
-            color: 'var(--color-text-secondary)',
-            maxWidth: 110,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {firstName}
-        </span>
-
         <div
           className="avatar"
           style={{ width: 34, height: 34, fontSize: 12 }}
-          aria-hidden="true"
+          role="img"
+          aria-label={profile.full_name}
+          title={profile.full_name}
         >
           {getInitials(profile.full_name)}
         </div>
