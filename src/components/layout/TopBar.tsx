@@ -4,7 +4,6 @@ import { LogOut } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import type { Profile } from '@/lib/types';
-import { getInitials } from '@/lib/utils';
 import HekkoLogo from '@/components/brand/HekkoLogo';
 
 interface TopBarProps {
@@ -49,19 +48,8 @@ export default function TopBar({ profile }: TopBarProps) {
         </span>
       </div>
 
-      {/* Avatar + salir. Sin el nombre escrito: el avatar ya identifica
-          quién tiene la sesión abierta y deja sitio al logo. */}
+      {/* Salir. La barra se queda con lo mínimo: marca, rol y salida. */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-        <div
-          className="avatar"
-          style={{ width: 34, height: 34, fontSize: 12 }}
-          role="img"
-          aria-label={profile.full_name}
-          title={profile.full_name}
-        >
-          {getInitials(profile.full_name)}
-        </div>
-
         <button
           onClick={handleLogout}
           className="action-pill"
