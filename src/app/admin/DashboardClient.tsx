@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { Order, Profile, Strategist, OrderStatus } from '@/lib/types';
 import OrderCard from '@/components/orders/OrderCard';
+import OrderBoard from '@/components/orders/OrderBoard';
 import OrderForm from '@/components/orders/OrderForm';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
@@ -13,23 +14,17 @@ interface AdminDashboardClientProps {
   strategists: Profile[];
 }
 
-type FilterStatus = 'all' | OrderStatus;
-
 export default function AdminDashboardClient({
   initialOrders,
   strategists: initialStrategists,
 }: AdminDashboardClientProps) {
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [strategists, setStrategists] = useState<Profile[]>(initialStrategists);
+  const [showCreate, setShowCreate] = useState(false);
 
   function handleStrategistCreated(m: Strategist) {
     setStrategists((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
   }
-  const [showCreate, setShowCreate] = useState(false);
-  const [filter, setFilter] = useState<FilterStatus>('all');
-
-  const filtered =
-    filter === 'all' ? orders : orders.filter((o) => o.status === filter);
 
   const stats = {
     total: orders.length,
@@ -57,137 +52,94 @@ export default function AdminDashboardClient({
     setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
   }
 
-  const FILTERS: { value: FilterStatus; label: string }[] = [
-    { value: 'all', label: 'Todas' },
-    { value: 'sin_estratega', label: 'Sin asignar' },
-    { value: 'con_estratega', label: 'En progreso' },
-    { value: 'entregada', label: 'Entregadas' },
-  ];
+  const activas = stats.sin_estratega + stats.con_estratega;
 
   return (
-    <div className="animate-fade-in" style={{ paddingTop: 16 }}>
-      {/* Stats */}
+    <div className="animate-fade-in" style={{ paddingTop: 18 }}>
+      {/* Resumen destacado */}
+      <div className="hero" style={{ marginBottom: 14 }}>
+        <p className="hero-sub" style={{ marginTop: 0 }}>Panel de administración</p>
+        <h1 className="hero-title" style={{ marginTop: 6 }}>
+          {activas === 0
+            ? 'Todo al día'
+            : `${activas} ${activas === 1 ? 'orden activa' : 'órdenes activas'}`}
+        </h1>
+        <p className="hero-sub">
+          {stats.total} {stats.total === 1 ? 'orden en total' : 'órdenes en total'} ·{' '}
+          {stats.entregada} {stats.entregada === 1 ? 'entregada' : 'entregadas'}
+        </p>
+      </div>
+
+      {/* Cifras */}
       <div
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(2, 1fr)',
           gap: 10,
-          marginBottom: 20,
+          marginBottom: 24,
         }}
       >
         <StatCard
-          icon={<ClipboardList size={18} />}
+          icon={<ClipboardList size={26} />}
           label="Total"
           value={stats.total}
-          color="var(--color-brand-400)"
+          color="var(--color-brand-500)"
         />
         <StatCard
-          icon={<Clock size={18} />}
+          icon={<Clock size={26} />}
           label="Sin asignar"
           value={stats.sin_estratega}
           color="var(--color-text-secondary)"
         />
         <StatCard
-          icon={<Loader size={18} />}
+          icon={<Loader size={26} />}
           label="En progreso"
           value={stats.con_estratega}
           color="var(--color-warning-text)"
         />
         <StatCard
-          icon={<CheckCircle2 size={18} />}
+          icon={<CheckCircle2 size={26} />}
           label="Entregadas"
           value={stats.entregada}
           color="var(--color-success-text)"
         />
       </div>
 
-      {/* Header + Create */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 12,
-        }}
-      >
-        <h2 style={{ fontSize: 16, fontWeight: 700 }}>Órdenes recientes</h2>
+      {/* Encabezado del tablero */}
+      <div className="page-head" style={{ marginBottom: 16, alignItems: 'center' }}>
+        <h2 className="page-title" style={{ fontSize: 18 }}>Tablero de órdenes</h2>
         <Button variant="primary" size="sm" onClick={() => setShowCreate(true)}>
           <Plus size={15} />
           Nueva orden
         </Button>
       </div>
 
-      {/* Filter tabs */}
-      <div
-        style={{
-          display: 'flex',
-          gap: 6,
-          marginBottom: 16,
-          overflowX: 'auto',
-          paddingBottom: 4,
-        }}
-      >
-        {FILTERS.map((f) => (
-          <button
-            key={f.value}
-            onClick={() => setFilter(f.value)}
-            style={{
-              padding: '6px 14px',
-              borderRadius: 999,
-              fontSize: 12,
-              fontWeight: 600,
-              border: '1px solid',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              transition: 'all 0.15s',
-              background:
-                filter === f.value
-                  ? 'var(--color-brand-500)'
-                  : 'var(--color-surface-2)',
-              color:
-                filter === f.value
-                  ? '#fff'
-                  : 'var(--color-text-secondary)',
-              borderColor:
-                filter === f.value
-                  ? 'var(--color-brand-500)'
-                  : 'var(--color-border)',
-            }}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Order list */}
-      {filtered.length === 0 ? (
-        <div className="empty-state">
-          <ClipboardList size={48} />
-          <p>No hay órdenes {filter !== 'all' ? 'con este filtro' : 'aún'}</p>
-          {filter === 'all' && (
+      {/* Tablero por estado */}
+      <OrderBoard
+        orders={orders}
+        emptyState={
+          <div className="empty-state">
+            <ClipboardList size={48} />
+            <p>No hay órdenes aún</p>
             <Button variant="primary" size="sm" onClick={() => setShowCreate(true)}>
               <Plus size={14} />
               Crear primera orden
             </Button>
-          )}
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {filtered.map((order) => (
-            <OrderCard
-              key={order.id}
-              order={order}
-              strategists={strategists}
-              role="admin"
-              onDelete={handleDelete}
-              onStatusChange={handleStatusChange}
-              onUpdate={handleUpdate}
-              canCreateStrategist
-              onStrategistCreated={handleStrategistCreated}
-            />
-          ))}
-        </div>
-      )}
+          </div>
+        }
+        renderCard={(order) => (
+          <OrderCard
+            order={order}
+            strategists={strategists}
+            role="admin"
+            onDelete={handleDelete}
+            onStatusChange={handleStatusChange}
+            onUpdate={handleUpdate}
+            canCreateStrategist
+            onStrategistCreated={handleStrategistCreated}
+          />
+        )}
+      />
 
       {/* Create Modal */}
       <Modal
@@ -220,36 +172,10 @@ function StatCard({
   color: string;
 }) {
   return (
-    <div
-      className="card"
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        padding: '12px 14px',
-      }}
-    >
-      <div
-        style={{
-          width: 38,
-          height: 38,
-          borderRadius: 10,
-          background: `color-mix(in srgb, ${color} 12%, transparent)`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color,
-          flexShrink: 0,
-        }}
-      >
-        {icon}
-      </div>
-      <div>
-        <p style={{ fontSize: 22, fontWeight: 800, color }}>{value}</p>
-        <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 1 }}>
-          {label}
-        </p>
-      </div>
+    <div className="stat" style={{ '--stat-color': color } as React.CSSProperties}>
+      <span className="stat-icon">{icon}</span>
+      <p className="stat-value">{value}</p>
+      <p className="stat-label">{label}</p>
     </div>
   );
 }

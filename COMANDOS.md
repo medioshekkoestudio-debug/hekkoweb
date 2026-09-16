@@ -98,12 +98,26 @@ where id = 1;
 
 ### Agregar un servicio nuevo
 
+Ya no hace falta SQL: en el formulario de la orden, abre el selector
+**Servicio** y elige **Agregar servicio**. Queda disponible de inmediato para
+todas las órdenes nuevas.
+
+> Requiere haber ejecutado una vez
+> [`supabase/migrations/0003_hekko_services.sql`](supabase/migrations/0003_hekko_services.sql),
+> que convierte el enum `service_type` en la tabla `services`.
+
+Para retirar un servicio del selector sin borrarlo (las órdenes que ya lo usan
+no se tocan):
+
 ```sql
-alter type public.service_type add value 'produccion_audiovisual';
+update public.services set active = false where slug = 'Producción audiovisual';
 ```
 
-> Después hay que añadirlo también en `SERVICE_LABELS`, en `src/lib/types.ts`,
-> para que aparezca con su etiqueta en la app.
+Para ver el catálogo:
+
+```sql
+select slug, label, active, position from public.services order by position;
+```
 
 ### Cambiar las etapas por defecto de las órdenes nuevas
 

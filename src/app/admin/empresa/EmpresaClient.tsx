@@ -46,23 +46,40 @@ export default function EmpresaClient({ company }: { company: CompanySettings })
   }
 
   return (
-    <div style={{ maxWidth: 480, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>Perfil de la empresa</h1>
-      <p style={{ color: 'var(--color-text-secondary)', fontSize: 13, marginBottom: 20 }}>
-        El nombre aparece en el seguimiento que ven tus clientes.
-      </p>
+    <div className="animate-fade-in" style={{ paddingTop: 18 }}>
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Perfil de la empresa</h1>
+          <p className="page-sub">
+            El nombre aparece en el seguimiento que ven tus clientes.
+          </p>
+        </div>
+      </div>
 
       {/* Logo */}
-      <div className="card" style={{ padding: 24, marginBottom: 16 }}>
-        <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>Logo</p>
-        <HekkoLogo height={48} />
-        <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 10 }}>
+      <div className="card" style={{ marginBottom: 14 }}>
+        <p className="eyebrow">Logo</p>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '22px 16px',
+            background: 'var(--color-surface-2)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 14,
+          }}
+        >
+          <HekkoLogo height={44} />
+        </div>
+        <p style={{ fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 12 }}>
           El logo oficial de Hekko viene integrado en la app.
         </p>
       </div>
 
       {/* Datos de la empresa */}
-      <div className="card" style={{ padding: 24 }}>
+      <div className="card">
+        <p className="eyebrow">Datos</p>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Input
             label="Nombre de la empresa"
@@ -89,10 +106,10 @@ export default function EmpresaClient({ company }: { company: CompanySettings })
           {error && (
             <div
               style={{
-                padding: '10px 14px',
-                background: 'rgba(239,68,68,0.1)',
-                border: '1px solid rgba(239,68,68,0.2)',
-                borderRadius: 8,
+                padding: '11px 14px',
+                background: 'rgba(239,68,68,0.08)',
+                border: '1px solid rgba(239,68,68,0.22)',
+                borderRadius: 10,
                 color: 'var(--color-danger-text)',
                 fontSize: 13,
               }}
@@ -107,10 +124,10 @@ export default function EmpresaClient({ company }: { company: CompanySettings })
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
-                padding: '10px 14px',
+                padding: '11px 14px',
                 background: 'rgba(16,185,129,0.1)',
-                border: '1px solid rgba(16,185,129,0.25)',
-                borderRadius: 8,
+                border: '1px solid rgba(16,185,129,0.28)',
+                borderRadius: 10,
                 color: 'var(--color-success-text)',
                 fontSize: 13,
                 fontWeight: 600,

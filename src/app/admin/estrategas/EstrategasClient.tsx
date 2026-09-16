@@ -71,19 +71,12 @@ export default function EstrategasClient({ initialStrategists, companyName }: Es
   const inactive = strategists.filter((m) => !m.active);
 
   return (
-    <div className="animate-fade-in" style={{ paddingTop: 16 }}>
-      {/* Header */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 20,
-        }}
-      >
+    <div className="animate-fade-in" style={{ paddingTop: 18 }}>
+      {/* Encabezado */}
+      <div className="page-head">
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 800 }}>Estrategas</h1>
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: 13, marginTop: 2 }}>
+          <h1 className="page-title">Estrategas</h1>
+          <p className="page-sub">
             {active.length} activos · {inactive.length} inactivos
           </p>
         </div>
@@ -93,21 +86,10 @@ export default function EstrategasClient({ initialStrategists, companyName }: Es
         </Button>
       </div>
 
-      {/* Active strategists */}
+      {/* Activos */}
       {active.length > 0 && (
-        <div style={{ marginBottom: 24 }}>
-          <p
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              color: 'var(--color-text-muted)',
-              marginBottom: 10,
-            }}
-          >
-            Activos
-          </p>
+        <div style={{ marginBottom: 28 }}>
+          <p className="eyebrow">Activos</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {active.map((m) => (
               <StrategistCard
@@ -123,21 +105,10 @@ export default function EstrategasClient({ initialStrategists, companyName }: Es
         </div>
       )}
 
-      {/* Inactive strategists */}
+      {/* Inactivos */}
       {inactive.length > 0 && (
         <div>
-          <p
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              color: 'var(--color-text-muted)',
-              marginBottom: 10,
-            }}
-          >
-            Inactivos
-          </p>
+          <p className="eyebrow">Inactivos</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {inactive.map((m) => (
               <StrategistCard
@@ -153,7 +124,7 @@ export default function EstrategasClient({ initialStrategists, companyName }: Es
         </div>
       )}
 
-      {/* Empty state */}
+      {/* Vacío */}
       {strategists.length === 0 && (
         <div className="empty-state">
           <Users size={48} />

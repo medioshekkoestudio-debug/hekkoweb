@@ -28,6 +28,13 @@ const STATUS_ICONS: Record<StageStatus, React.ReactNode> = {
   pending: <Circle size={20} color="var(--color-text-muted)" />,
 };
 
+// Clase visual de la tarjeta según el estado de la etapa.
+const STAGE_CLASS: Record<StageStatus, string> = {
+  done: 'stage-card is-done',
+  in_progress: 'stage-card is-active',
+  pending: 'stage-card',
+};
+
 export default function StageTimeline({
   orderId,
   initialStages,
@@ -267,54 +274,29 @@ export default function StageTimeline({
   const progress = stages.length > 0 ? Math.round((done / stages.length) * 100) : 0;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* Progress bar summary */}
-      <div
-        className="card"
-        style={{ background: 'var(--color-surface-2)', padding: '14px 16px' }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      {/* Resumen de progreso */}
+      <div className="card" style={{ padding: '15px 16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
           <span style={{ fontSize: 13, fontWeight: 600 }}>Progreso general</span>
-          <span style={{ fontSize: 13, color: 'var(--color-brand-400)', fontWeight: 700 }}>
+          <span style={{ fontSize: 13, color: 'var(--color-brand-500)', fontWeight: 700 }}>
             {done}/{stages.length} etapas
           </span>
         </div>
-        <div
-          style={{
-            height: 6,
-            background: 'var(--color-surface-3)',
-            borderRadius: 3,
-            overflow: 'hidden',
-          }}
-        >
+        <div className="progress-track" style={{ height: 6 }}>
           <div
-            style={{
-              height: '100%',
-              width: `${progress}%`,
-              background: 'linear-gradient(90deg, var(--color-brand-500), var(--color-brand-400))',
-              borderRadius: 3,
-              transition: 'width 0.4s ease',
-            }}
+            className={`progress-fill${progress === 100 ? ' is-complete' : ''}`}
+            style={{ width: `${progress}%` }}
           />
         </div>
       </div>
 
-      {/* Timeline */}
+      {/* Línea de tiempo */}
       <div style={{ position: 'relative' }}>
-        {/* Vertical line */}
-        <div
-          style={{
-            position: 'absolute',
-            left: 9,
-            top: 10,
-            bottom: 10,
-            width: 2,
-            background: 'var(--color-border)',
-            zIndex: 0,
-          }}
-        />
+        {/* Línea vertical */}
+        <div className="timeline-line" style={{ left: 9, top: 10, bottom: 10 }} />
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {stages.map((stage, index) => {
             const isLoading = loadingId === stage.id;
             return (
@@ -334,36 +316,25 @@ export default function StageTimeline({
                   opacity: dragIndex === index ? 0.6 : 1,
                 }}
               >
-                {/* Icon */}
-                <div style={{ marginTop: 12, flexShrink: 0 }}>
+                {/* Icono de estado */}
+                <div
+                  style={{
+                    marginTop: 12,
+                    flexShrink: 0,
+                    background: 'var(--color-bg)',
+                    borderRadius: '50%',
+                    display: 'flex',
+                  }}
+                >
                   {isLoading ? (
-                    <Loader2 size={20} color="var(--color-brand-400)" style={{ animation: 'spin 0.8s linear infinite' }} />
+                    <Loader2 size={20} color="var(--color-brand-500)" style={{ animation: 'spin 0.8s linear infinite' }} />
                   ) : (
                     STATUS_ICONS[stage.status]
                   )}
                 </div>
 
-                {/* Card */}
-                <div
-                  style={{
-                    flex: 1,
-                    background: stage.status === 'done'
-                      ? 'rgba(16,185,129,0.06)'
-                      : stage.status === 'in_progress'
-                      ? 'rgba(246,160,12,0.06)'
-                      : 'var(--color-surface)',
-                    border: `1px solid ${
-                      stage.status === 'done'
-                        ? 'rgba(16,185,129,0.15)'
-                        : stage.status === 'in_progress'
-                        ? 'rgba(246,160,12,0.2)'
-                        : 'var(--color-border)'
-                    }`,
-                    borderRadius: 10,
-                    padding: '10px 14px',
-                    marginBottom: 8,
-                  }}
-                >
+                {/* Tarjeta */}
+                <div className={STAGE_CLASS[stage.status]} style={{ flex: 1, minWidth: 0 }}>
                   {editingId === stage.id ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       <input
@@ -398,53 +369,29 @@ export default function StageTimeline({
                   ) : (
                     <>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                        <span
-                          style={{
-                            fontSize: 14,
-                            fontWeight: 600,
-                            color: stage.status === 'done'
-                              ? 'var(--color-text-secondary)'
-                              : 'var(--color-text-primary)',
-                            textDecoration: stage.status === 'done' ? 'line-through' : 'none',
-                          }}
-                        >
-                          {stage.name}
-                        </span>
+                        <span className="stage-name">{stage.name}</span>
 
                         {canEdit && (
-                          <div style={{ display: 'flex', gap: 8, flexShrink: 0, alignItems: 'center' }}>
+                          <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center' }}>
                             <button
                               onPointerDown={(e) => startDrag(index, e)}
                               title="Mantén y arrastra para mover la etapa arriba o abajo"
                               aria-label="Arrastrar para reordenar etapa"
+                              className="action-pill"
                               style={{
-                                background: dragIndex === index ? 'var(--color-surface-3)' : 'transparent',
-                                border: 'none',
-                                color: dragIndex === index ? 'var(--color-brand-400)' : 'var(--color-text-muted)',
+                                padding: 6,
                                 cursor: dragIndex === index ? 'grabbing' : 'grab',
                                 touchAction: 'none',
-                                borderRadius: 6,
-                                padding: 6,
-                                display: 'flex',
-                                alignItems: 'center',
+                                color: dragIndex === index ? 'var(--color-brand-500)' : undefined,
                               }}
                             >
-                              <GripVertical size={18} />
+                              <GripVertical size={16} />
                             </button>
                             <button
                               onClick={() => updateStage(stage.id, cycleStatus(stage.status))}
                               disabled={isLoading}
-                              style={{
-                                background: 'var(--color-surface-2)',
-                                border: '1px solid var(--color-border)',
-                                borderRadius: 6,
-                                padding: '4px 10px',
-                                color: 'var(--color-text-secondary)',
-                                fontSize: 11,
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                transition: 'all 0.15s',
-                              }}
+                              className="action-pill"
+                              style={{ padding: '5px 11px', fontSize: 11.5 }}
                             >
                               {stage.status === 'pending'
                                 ? 'Iniciar'
@@ -456,16 +403,9 @@ export default function StageTimeline({
                               onClick={() => startEdit(stage)}
                               disabled={isLoading}
                               title="Editar título y descripción"
-                              style={{
-                                background: 'var(--color-surface-2)',
-                                border: '1px solid var(--color-border)',
-                                borderRadius: 6,
-                                color: 'var(--color-text-secondary)',
-                                cursor: 'pointer',
-                                padding: 6,
-                                display: 'flex',
-                                alignItems: 'center',
-                              }}
+                              aria-label="Editar etapa"
+                              className="action-pill"
+                              style={{ padding: 6 }}
                             >
                               <Edit2 size={13} />
                             </button>
@@ -476,9 +416,9 @@ export default function StageTimeline({
                       {stage.description && (
                         <p
                           style={{
-                            fontSize: 12,
+                            fontSize: 12.5,
                             color: 'var(--color-text-secondary)',
-                            marginTop: 6,
+                            marginTop: 7,
                             whiteSpace: 'pre-wrap',
                           }}
                         >
@@ -492,7 +432,7 @@ export default function StageTimeline({
                             display: 'flex',
                             alignItems: 'center',
                             gap: 4,
-                            marginTop: 4,
+                            marginTop: 6,
                             color: 'var(--color-text-muted)',
                             fontSize: 11,
                           }}
@@ -510,93 +450,60 @@ export default function StageTimeline({
                         />
                       )}
 
-                      {canEdit && (
-                        <button
-                          onClick={() => setPickerStageId(stage.id)}
-                          disabled={uploadingId === stage.id}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            marginTop: 10,
-                            padding: '6px 12px',
-                            background: 'var(--color-surface-2)',
-                            border: '1px solid var(--color-border)',
-                            borderRadius: 8,
-                            fontSize: 12,
-                            fontWeight: 600,
-                            color: 'var(--color-text-secondary)',
-                            cursor: uploadingId === stage.id ? 'default' : 'pointer',
-                          }}
-                        >
-                          {uploadingId === stage.id ? (
-                            <Loader2 size={13} style={{ animation: 'spin 0.8s linear infinite' }} />
-                          ) : (
-                            <Plus size={13} />
+                      {(canEdit || canNotify) && (
+                        <div className="action-row" style={{ marginTop: 12 }}>
+                          {canEdit && (
+                            <button
+                              onClick={() => setPickerStageId(stage.id)}
+                              disabled={uploadingId === stage.id}
+                              className="action-pill"
+                            >
+                              {uploadingId === stage.id ? (
+                                <Loader2 size={13} style={{ animation: 'spin 0.8s linear infinite' }} />
+                              ) : (
+                                <Plus size={13} />
+                              )}
+                              {uploadingId === stage.id
+                                ? 'Subiendo...'
+                                : 'Agregar foto, video, nota de voz o documento'}
+                            </button>
                           )}
-                          {uploadingId === stage.id
-                            ? 'Subiendo...'
-                            : 'Agregar foto, video, nota de voz o documento'}
-                        </button>
-                      )}
 
-                      {canNotify && (
-                        <div style={{ marginTop: 8 }}>
-                          <button
-                            onClick={() =>
-                              openWhatsApp(
-                                clientWhatsapp,
-                                buildStageReminderMessage(
-                                  clientFirstName,
-                                  stage.name,
-                                  stage.status,
-                                  publicToken,
-                                  SITE_URL,
-                                  slugify(stage.name) === 'entrega-final'
+                          {canNotify && (
+                            <button
+                              onClick={() =>
+                                openWhatsApp(
+                                  clientWhatsapp,
+                                  buildStageReminderMessage(
+                                    clientFirstName,
+                                    stage.name,
+                                    stage.status,
+                                    publicToken,
+                                    SITE_URL,
+                                    slugify(stage.name) === 'entrega-final'
+                                  )
                                 )
-                              )
-                            }
-                            title="Enviar aviso de esta etapa al cliente por WhatsApp"
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 6,
-                              padding: '6px 12px',
-                              background: 'rgba(37,211,102,0.12)',
-                              border: '1px solid rgba(37,211,102,0.2)',
-                              borderRadius: 8,
-                              fontSize: 12,
-                              fontWeight: 600,
-                              color: 'var(--color-whatsapp-text)',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            <MessageCircle size={13} />
-                            Avisar al cliente
-                          </button>
-                        </div>
-                      )}
+                              }
+                              title="Enviar aviso de esta etapa al cliente por WhatsApp"
+                              className="action-pill action-pill-wa"
+                            >
+                              <MessageCircle size={13} />
+                              Avisar al cliente
+                            </button>
+                          )}
 
-                      {canEdit && (
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-                          <button
-                            onClick={() => deleteStage(stage.id)}
-                            disabled={isLoading}
-                            title="Eliminar etapa"
-                            aria-label="Eliminar etapa"
-                            style={{
-                              background: 'rgba(239,68,68,0.1)',
-                              border: '1px solid rgba(239,68,68,0.25)',
-                              borderRadius: 6,
-                              color: 'var(--color-danger-text)',
-                              cursor: 'pointer',
-                              padding: 6,
-                              display: 'flex',
-                              alignItems: 'center',
-                            }}
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                          {canEdit && (
+                            <button
+                              onClick={() => deleteStage(stage.id)}
+                              disabled={isLoading}
+                              title="Eliminar etapa"
+                              aria-label="Eliminar etapa"
+                              className="action-pill action-pill-danger"
+                              style={{ padding: 7, marginLeft: 'auto' }}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
                         </div>
                       )}
                     </>
@@ -608,7 +515,7 @@ export default function StageTimeline({
         </div>
       </div>
 
-      {/* Add custom stage */}
+      {/* Agregar etapa personalizada */}
       {canEdit && (
         <div>
           {addingStage ? (

@@ -99,20 +99,12 @@ export default function InitialAttachments({
   }
 
   return (
-    <div className="card" style={{ marginBottom: 16 }}>
-      <h2
-        style={{
-          fontSize: 16,
-          fontWeight: 700,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-        }}
-      >
-        <Paperclip size={16} />
+    <div className="card" style={{ marginBottom: 14 }}>
+      <p className="eyebrow">
+        <Paperclip size={13} />
         Archivos adjuntos
-      </h2>
-      <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>
+      </p>
+      <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: -6 }}>
         Fotos, videos y notas de voz cargados al crear la orden.
       </p>
 
@@ -125,7 +117,7 @@ export default function InitialAttachments({
         />
       ) : (
         canEdit && (
-          <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 10 }}>
+          <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 12 }}>
             Aún no hay archivos. Agrega fotos, videos, notas de voz o documentos.
           </p>
         )
@@ -135,20 +127,8 @@ export default function InitialAttachments({
         <button
           onClick={() => setShowPicker(true)}
           disabled={uploading}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            marginTop: 12,
-            padding: '6px 12px',
-            background: 'var(--color-surface-2)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 8,
-            fontSize: 12,
-            fontWeight: 600,
-            color: 'var(--color-text-secondary)',
-            cursor: uploading ? 'default' : 'pointer',
-          }}
+          className="action-pill"
+          style={{ marginTop: 14 }}
         >
           {uploading ? (
             <Loader2 size={13} style={{ animation: 'spin 0.8s linear infinite' }} />

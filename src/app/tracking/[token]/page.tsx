@@ -1,7 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import type { Order, OrderStage, CompanySettings } from '@/lib/types';
-import { SERVICE_LABELS } from '@/lib/types';
+import { serviceLabel } from '@/lib/types';
 import TrackingClient from './TrackingClient';
 import type { Metadata } from 'next';
 
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         client_first_name: string;
         client_last_name: string;
         project_name: string;
-        service_type: keyof typeof SERVICE_LABELS;
+        service_type: string;
       }
     | null;
   if (!data) return { title: 'Seguimiento de proyecto' };
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const companyName = (companyRes.data as unknown as { name: string } | null)?.name ?? 'Hekko';
   return {
     title: `Seguimiento de ${data.client_first_name} ${data.client_last_name} — ${companyName}`,
-    description: `Avance de ${data.project_name} (${SERVICE_LABELS[data.service_type]})`,
+    description: `Avance de ${data.project_name} (${serviceLabel(data.service_type)})`,
   };
 }
 

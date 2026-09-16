@@ -8,16 +8,17 @@ import type {
   CreateOrderPayload,
   OrderStage,
   ServiceType,
+  Service,
 } from '@/lib/types';
-import { SERVICE_LABELS, SERVICE_TYPES } from '@/lib/types';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
 import PhoneInput from '@/components/ui/PhoneInput';
-import Select from '@/components/ui/Select';
 import AttachmentPicker from '@/components/orders/AttachmentPicker';
 import StrategistSelect from '@/components/orders/StrategistSelect';
 import StrategistForm from '@/components/strategists/StrategistForm';
+import ServiceSelect from '@/components/orders/ServiceSelect';
+import ServiceForm from '@/components/orders/ServiceForm';
 import { uploadStageAttachment } from '@/lib/attachments';
 import {
   User,
@@ -28,8 +29,6 @@ import {
   Video as VideoIcon,
   FileText,
 } from 'lucide-react';
-
-const SERVICE_OPTIONS = SERVICE_TYPES.map((t) => ({ value: t, label: SERVICE_LABELS[t] }));
 
 interface OrderFormProps {
   strategists: Profile[];
@@ -72,6 +71,9 @@ export default function OrderForm({
   // Lista local de estrategas: al crear uno nuevo desde aquí, se agrega y se selecciona.
   const [strategistsList, setStrategistsList] = useState<Profile[]>(strategists);
   const [showAddStrategist, setShowAddStrategist] = useState(false);
+  // Catálogo de servicios: se puede ampliar desde el propio selector.
+  const [services, setServices] = useState<Service[]>([]);
+  const [showAddService, setShowAddService] = useState(false);
   const [form, setForm] = useState<CreateOrderPayload>(
     order
       ? {
@@ -98,6 +100,27 @@ export default function OrderForm({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Cargar el catálogo de servicios al abrir el formulario.
+  useEffect(() => {
+    let active = true;
+    fetch('/api/services')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: Service[]) => {
+        if (active && Array.isArray(data)) setServices(data);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Servicio creado desde el selector: agregarlo al catálogo local y elegirlo.
+  function handleServiceCreated(s: Service) {
+    setServices((prev) => (prev.some((x) => x.slug === s.slug) ? prev : [...prev, s]));
+    setForm((prev) => ({ ...prev, service_type: s.slug }));
+    setShowAddService(false);
+  }
 
   function set(field: keyof CreateOrderPayload, value: string | null) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -228,12 +251,13 @@ export default function OrderForm({
         <label className="form-label" htmlFor="orden-servicio">
           Servicio
         </label>
-        <Select
+        <ServiceSelect
           id="orden-servicio"
-          options={SERVICE_OPTIONS}
+          services={services}
           value={form.service_type}
           onChange={setService}
           disabled={loading}
+          onAddNew={() => setShowAddService(true)}
         />
       </div>
 
@@ -322,6 +346,19 @@ export default function OrderForm({
 
       {showPicker && (
         <AttachmentPicker onFiles={addFiles} onClose={() => setShowPicker(false)} />
+      )}
+
+      {showAddService && (
+        <Modal
+          isOpen={showAddService}
+          onClose={() => setShowAddService(false)}
+          title="Nuevo servicio"
+        >
+          <ServiceForm
+            onSaved={handleServiceCreated}
+            onClose={() => setShowAddService(false)}
+          />
+        </Modal>
       )}
 
       {showAddStrategist && (

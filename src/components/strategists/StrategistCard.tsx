@@ -1,7 +1,6 @@
 'use client';
 
 import type { Strategist } from '@/lib/types';
-import Button from '@/components/ui/Button';
 import CopyLinkButton from '@/components/orders/CopyLinkButton';
 import { Phone, Mail, Edit2, Trash2, ToggleLeft, ToggleRight, KeyRound } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
@@ -38,131 +37,122 @@ export default function StrategistCard({
 
   return (
     <div
-      className="card"
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 14,
-        opacity: strategist.active ? 1 : 0.5,
-      }}
-    >
-      {/* Avatar */}
-      <div
-        style={{
-          width: 44,
-          height: 44,
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg, var(--color-brand-700), var(--color-brand-900))',
+      className="card card-accent"
+      style={
+        {
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 15,
-          fontWeight: 700,
-          color: 'var(--color-brand-300)',
-          flexShrink: 0,
-        }}
-      >
-        {getInitials(strategist.full_name)}
-      </div>
+          flexDirection: 'column',
+          gap: 12,
+          opacity: strategist.active ? 1 : 0.62,
+          '--accent-color': strategist.active
+            ? 'var(--color-turquoise)'
+            : 'var(--color-border-strong)',
+        } as React.CSSProperties
+      }
+    >
+      {/* Identidad */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 13, minWidth: 0 }}>
+        <div className="avatar" style={{ width: 46, height: 46, fontSize: 15 }} aria-hidden="true">
+          {getInitials(strategist.full_name)}
+        </div>
 
-      {/* Info */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontWeight: 600, fontSize: 15 }}>{strategist.full_name}</p>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <p style={{ fontWeight: 700, fontSize: 15.5, letterSpacing: '-0.01em' }}>
+              {strategist.full_name}
+            </p>
+            <span className={`badge ${strategist.active ? 'badge-success' : 'badge-neutral'}`}>
+              {strategist.active ? 'Activo' : 'Inactivo'}
+            </span>
+          </div>
 
-        {strategist.email && (
-          <p
-            style={{
-              color: 'var(--color-text-secondary)',
-              fontSize: 12,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              marginTop: 2,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            <Mail size={11} style={{ flexShrink: 0 }} />
-            {strategist.email}
-          </p>
-        )}
-
-        {strategist.phone && (
-          <p
-            style={{
-              color: 'var(--color-text-secondary)',
-              fontSize: 12,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              marginTop: 2,
-            }}
-          >
-            <Phone size={11} />
-            {strategist.phone}
-          </p>
-        )}
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 4,
-              padding: '2px 8px',
-              borderRadius: 999,
-              fontSize: 11,
-              fontWeight: 600,
-              background: strategist.active
-                ? 'rgba(16,185,129,0.12)'
-                : 'rgba(100,100,100,0.12)',
-              color: strategist.active ? 'var(--color-success-text)' : 'var(--color-text-muted)',
-            }}
-          >
-            {strategist.active ? 'Activo' : 'Inactivo'}
-          </span>
-          {strategist.email && <CopyLinkButton url={strategist.email} label="Copiar email" />}
-          {onResend && (
-            <button
-              type="button"
-              onClick={() => onResend(strategist)}
+          {strategist.email && (
+            <p
               style={{
-                display: 'inline-flex',
+                color: 'var(--color-text-secondary)',
+                fontSize: 12.5,
+                display: 'flex',
                 alignItems: 'center',
-                gap: 6,
-                padding: '8px 14px',
-                background: 'rgba(37,211,102,0.12)',
-                color: 'var(--color-whatsapp-text)',
-                borderRadius: 8,
-                fontSize: 13,
-                fontWeight: 600,
-                border: '1px solid rgba(37,211,102,0.2)',
-                cursor: 'pointer',
+                gap: 5,
+                marginTop: 4,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
               }}
             >
-              <KeyRound size={13} />
-              Reenviar acceso
-            </button>
+              <Mail size={12} style={{ flexShrink: 0 }} />
+              {strategist.email}
+            </p>
+          )}
+
+          {strategist.phone && (
+            <p
+              style={{
+                color: 'var(--color-text-secondary)',
+                fontSize: 12.5,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                marginTop: 3,
+              }}
+            >
+              <Phone size={12} />
+              {strategist.phone}
+            </p>
           )}
         </div>
       </div>
 
-      {/* Actions */}
-      <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-        <Button variant="ghost" size="icon" onClick={() => onEdit?.(strategist)}>
-          <Edit2 size={15} />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={handleToggle}>
+      <div className="divider" style={{ margin: 0 }} />
+
+      {/* Acciones */}
+      <div className="action-row">
+        {strategist.email && <CopyLinkButton url={strategist.email} label="Copiar email" />}
+
+        {onResend && (
+          <button
+            type="button"
+            onClick={() => onResend(strategist)}
+            className="action-pill action-pill-wa"
+          >
+            <KeyRound size={13} />
+            Reenviar acceso
+          </button>
+        )}
+
+        <button
+          type="button"
+          className="action-pill"
+          onClick={() => onEdit?.(strategist)}
+          aria-label="Editar estratega"
+          title="Editar estratega"
+        >
+          <Edit2 size={14} />
+        </button>
+
+        <button
+          type="button"
+          className="action-pill"
+          onClick={handleToggle}
+          aria-label={strategist.active ? 'Desactivar estratega' : 'Activar estratega'}
+          title={strategist.active ? 'Desactivar' : 'Activar'}
+        >
           {strategist.active ? (
-            <ToggleRight size={18} color="var(--color-brand-400)" />
+            <ToggleRight size={18} color="var(--color-brand-500)" />
           ) : (
             <ToggleLeft size={18} />
           )}
-        </Button>
-        <Button variant="danger" size="icon" onClick={handleDelete}>
-          <Trash2 size={15} />
-        </Button>
+        </button>
+
+        <button
+          type="button"
+          className="action-pill action-pill-danger"
+          onClick={handleDelete}
+          aria-label="Desactivar estratega"
+          title="Desactivar estratega"
+        >
+          <Trash2 size={14} />
+        </button>
       </div>
     </div>
   );

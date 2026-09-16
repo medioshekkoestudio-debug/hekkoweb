@@ -1,9 +1,9 @@
 'use client';
 
 import type { Order, OrderStage, StageStatus, OrderStatus } from '@/lib/types';
-import { SERVICE_LABELS } from '@/lib/types';
+import { serviceLabel } from '@/lib/types';
 import { formatDate, ORDER_STATUS_LABELS } from '@/lib/utils';
-import { CheckCircle2, Circle, Loader2, Briefcase, Tag, UserRound, Clock } from 'lucide-react';
+import { CheckCircle2, Circle, Briefcase, Tag, UserRound, Clock } from 'lucide-react';
 import AttachmentGallery from '@/components/orders/AttachmentGallery';
 import HekkoLogo from '@/components/brand/HekkoLogo';
 
@@ -29,16 +29,24 @@ const STAGE_ICONS: Record<StageStatus, React.ReactNode> = {
   pending: <Circle size={22} color="rgba(3,33,43,0.2)" />,
 };
 
-const STATUS_BG: Record<OrderStatus, string> = {
-  sin_estratega: 'rgba(3,33,43,0.04)',
-  con_estratega: 'rgba(246,160,12,0.12)',
-  entregada: 'rgba(16,185,129,0.1)',
+// Clase visual de cada etapa en el seguimiento.
+const STAGE_CLASS: Record<StageStatus, string> = {
+  done: 'stage-card is-done',
+  in_progress: 'stage-card is-active',
+  pending: 'stage-card',
 };
 
-const STATUS_COLOR: Record<OrderStatus, string> = {
-  sin_estratega: 'var(--color-text-secondary)',
-  con_estratega: 'var(--color-warning-text)',
-  entregada: 'var(--color-success-text)',
+const STATUS_HEADLINE: Record<OrderStatus, string> = {
+  sin_estratega: 'En espera de estratega',
+  con_estratega: 'En proceso 🚀',
+  entregada: '¡Tu proyecto está listo! 🎉',
+};
+
+// Color del punto indicador del estado sobre el panel oscuro.
+const STATUS_DOT: Record<OrderStatus, string> = {
+  sin_estratega: 'rgba(255,255,255,0.6)',
+  con_estratega: '#F6A00C',
+  entregada: '#34d399',
 };
 
 export default function TrackingClient({ order, companyName }: TrackingClientProps) {
@@ -58,73 +66,81 @@ export default function TrackingClient({ order, companyName }: TrackingClientPro
     <div
       style={{
         minHeight: '100dvh',
-        background: 'radial-gradient(ellipse at top, rgba(43,161,183,0.12) 0%, transparent 50%), var(--color-bg)',
-        padding: '24px 16px',
+        padding: '22px 16px 32px',
         maxWidth: 480,
         margin: '0 auto',
       }}
     >
-      {/* Logo header */}
+      {/* Marca */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'space-between',
           gap: 12,
-          marginBottom: 28,
+          marginBottom: 18,
         }}
       >
-        <HekkoLogo height={32} />
-        <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.2 }}>
-          Seguimiento de tu proyecto
+        <HekkoLogo height={30} />
+        <p style={{ fontSize: 11.5, color: 'var(--color-text-muted)', textAlign: 'right' }}>
+          Seguimiento
+          <br />
+          de tu proyecto
         </p>
       </div>
 
-      {/* Status banner */}
-      <div
-        className="animate-fade-in"
-        style={{
-          background: STATUS_BG[order.status],
-          border: `1px solid color-mix(in srgb, ${STATUS_COLOR[order.status]} 30%, transparent)`,
-          borderRadius: 14,
-          padding: '14px 18px',
-          marginBottom: 16,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-        }}
-      >
+      {/* Estado + progreso */}
+      <div className="hero animate-fade-in" style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 16 }}>
+          <span
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: '50%',
+              background: STATUS_DOT[order.status],
+              animation:
+                order.status !== 'sin_estratega' ? 'pulse-glow 2s ease-in-out infinite' : 'none',
+              flexShrink: 0,
+            }}
+          />
+          <div style={{ minWidth: 0 }}>
+            <p className="hero-title" style={{ fontSize: 18 }}>
+              {STATUS_HEADLINE[order.status]}
+            </p>
+            <p className="hero-sub">{ORDER_STATUS_LABELS[order.status]}</p>
+          </div>
+        </div>
+
         <div
           style={{
-            width: 10,
-            height: 10,
-            borderRadius: '50%',
-            background: STATUS_COLOR[order.status],
-            boxShadow: order.status === 'entregada'
-              ? '0 0 0 4px rgba(16,185,129,0.2)'
-              : order.status === 'con_estratega'
-              ? '0 0 0 4px rgba(246,160,12,0.2)'
-              : 'none',
-            animation: order.status !== 'sin_estratega' ? 'pulse-glow 2s ease-in-out infinite' : 'none',
-            flexShrink: 0,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'baseline',
+            marginBottom: 8,
           }}
-        />
-        <div>
-          <p
+        >
+          <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.75)' }}>
+            {done} de {stages.length} etapas completadas
+          </span>
+          <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em' }}>
+            {progress}%
+          </span>
+        </div>
+
+        <div
+          className="progress-track"
+          style={{ height: 7, background: 'rgba(255,255,255,0.18)' }}
+        >
+          <div
+            className={`progress-fill${progress === 100 ? ' is-complete' : ''}`}
             style={{
-              fontWeight: 700,
-              fontSize: 15,
-              color: STATUS_COLOR[order.status],
+              width: `${progress}%`,
+              background:
+                progress === 100
+                  ? 'linear-gradient(90deg, #10b981, #34d399)'
+                  : 'linear-gradient(90deg, #2BA1B7, #9acfda)',
             }}
-          >
-            {order.status === 'entregada'
-              ? '¡Tu proyecto está listo! 🎉'
-              : order.status === 'con_estratega'
-              ? 'En proceso 🚀'
-              : 'En espera de estratega'}
-          </p>
-          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>
-            {ORDER_STATUS_LABELS[order.status]}
-          </p>
+          />
         </div>
       </div>
 
@@ -133,13 +149,11 @@ export default function TrackingClient({ order, companyName }: TrackingClientPro
         className="card animate-fade-in"
         style={{ marginBottom: 16, animationDelay: '0.05s' }}
       >
-        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)', marginBottom: 12 }}>
-          Información
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <p className="eyebrow">Información</p>
+        <div className="meta-list">
           <Row label="Cliente" value={clientName} />
           <Row icon={<Briefcase size={13} />} label="Proyecto" value={order.project_name} />
-          <Row icon={<Tag size={13} />} label="Servicio" value={SERVICE_LABELS[order.service_type]} />
+          <Row icon={<Tag size={13} />} label="Servicio" value={serviceLabel(order.service_type)} />
           {strategist && (
             <Row icon={<UserRound size={13} />} label="Estratega" value={strategist.full_name} />
           )}
@@ -152,10 +166,8 @@ export default function TrackingClient({ order, companyName }: TrackingClientPro
 
         {order.notes && (
           <>
-            <div style={{ height: 1, background: 'var(--color-border)', margin: '12px 0' }} />
-            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)', marginBottom: 6 }}>
-              Notas
-            </p>
+            <div className="divider" />
+            <p className="eyebrow">Notas</p>
             <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', whiteSpace: 'pre-wrap' }}>
               {order.notes}
             </p>
@@ -164,91 +176,22 @@ export default function TrackingClient({ order, companyName }: TrackingClientPro
 
         {intakeAttachments.length > 0 && (
           <>
-            <div style={{ height: 1, background: 'var(--color-border)', margin: '12px 0' }} />
-            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
-              Fotos y archivos
-            </p>
+            <div className="divider" />
+            <p className="eyebrow">Fotos y archivos</p>
             <AttachmentGallery attachments={intakeAttachments} tile={80} />
           </>
         )}
       </div>
 
-      {/* Progress summary */}
-      <div
-        className="card animate-fade-in"
-        style={{ marginBottom: 20, animationDelay: '0.1s' }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-          <span style={{ fontSize: 14, fontWeight: 600 }}>Progreso del servicio</span>
-          <span
-            style={{
-              fontSize: 14,
-              fontWeight: 700,
-              color: 'var(--color-brand-400)',
-            }}
-          >
-            {progress}%
-          </span>
-        </div>
-        <div
-          style={{
-            height: 8,
-            background: 'var(--color-surface-3)',
-            borderRadius: 4,
-            overflow: 'hidden',
-          }}
-        >
-          <div
-            style={{
-              height: '100%',
-              width: `${progress}%`,
-              background:
-                progress === 100
-                  ? 'linear-gradient(90deg, #10b981, #34d399)'
-                  : 'linear-gradient(90deg, var(--color-brand-500), var(--color-turquoise))',
-              borderRadius: 4,
-              transition: 'width 0.6s ease',
-            }}
-          />
-        </div>
-        <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 8 }}>
-          {done} de {stages.length} etapas completadas
-        </p>
-      </div>
-
-      {/* Timeline */}
-      <div
-        className="animate-fade-in"
-        style={{ animationDelay: '0.15s' }}
-      >
-        <p
-          style={{
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            color: 'var(--color-text-muted)',
-            marginBottom: 16,
-          }}
-        >
-          Etapas del servicio
-        </p>
+      {/* Etapas */}
+      <div className="animate-fade-in" style={{ animationDelay: '0.15s' }}>
+        <p className="eyebrow">Etapas del servicio</p>
 
         <div style={{ position: 'relative' }}>
-          {/* Vertical connector line */}
-          <div
-            style={{
-              position: 'absolute',
-              left: 10,
-              top: 11,
-              bottom: 11,
-              width: 2,
-              background: 'var(--color-border)',
-              zIndex: 0,
-            }}
-          />
+          {/* Línea vertical que une las etapas */}
+          <div className="timeline-line" style={{ left: 10, top: 11, bottom: 11 }} />
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {stages.map((stage, idx) => (
               <div
                 key={stage.id}
@@ -262,54 +205,36 @@ export default function TrackingClient({ order, companyName }: TrackingClientPro
                   animationDelay: `${0.15 + idx * 0.06}s`,
                 }}
               >
-                {/* Icon */}
-                <div style={{ marginTop: 10, flexShrink: 0 }}>
+                {/* Icono */}
+                <div
+                  style={{
+                    marginTop: 10,
+                    flexShrink: 0,
+                    background: 'var(--color-bg)',
+                    borderRadius: '50%',
+                    display: 'flex',
+                  }}
+                >
                   {STAGE_ICONS[stage.status]}
                 </div>
 
-                {/* Stage card */}
+                {/* Tarjeta de la etapa */}
                 <div
+                  className={STAGE_CLASS[stage.status]}
                   style={{
                     flex: 1,
-                    background:
-                      stage.status === 'done'
-                        ? 'rgba(16,185,129,0.06)'
-                        : stage.status === 'in_progress'
-                        ? 'rgba(246,160,12,0.08)'
-                        : 'var(--color-surface)',
-                    border: `1px solid ${
-                      stage.status === 'done'
-                        ? 'rgba(16,185,129,0.2)'
-                        : stage.status === 'in_progress'
-                        ? 'rgba(246,160,12,0.35)'
-                        : 'var(--color-border)'
-                    }`,
-                    borderRadius: 10,
-                    padding: '10px 14px',
-                    marginBottom: 8,
-                    opacity: stage.status === 'pending' ? 0.5 : 1,
+                    minWidth: 0,
+                    opacity: stage.status === 'pending' ? 0.62 : 1,
                   }}
                 >
-                  <p
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 600,
-                      color:
-                        stage.status === 'done'
-                          ? 'var(--color-text-secondary)'
-                          : 'var(--color-text-primary)',
-                      textDecoration: stage.status === 'done' ? 'line-through' : 'none',
-                    }}
-                  >
-                    {stage.name}
-                  </p>
+                  <p className="stage-name">{stage.name}</p>
 
                   {stage.description && (
                     <p
                       style={{
-                        fontSize: 12,
+                        fontSize: 12.5,
                         color: 'var(--color-text-secondary)',
-                        marginTop: 6,
+                        marginTop: 7,
                         whiteSpace: 'pre-wrap',
                       }}
                     >
@@ -321,11 +246,9 @@ export default function TrackingClient({ order, companyName }: TrackingClientPro
                     <p
                       style={{
                         fontSize: 12,
+                        fontWeight: 600,
                         color: 'var(--color-warning-text)',
-                        marginTop: 4,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 4,
+                        marginTop: 6,
                       }}
                     >
                       ⏳ En proceso ahora mismo
@@ -337,7 +260,7 @@ export default function TrackingClient({ order, companyName }: TrackingClientPro
                       style={{
                         fontSize: 11,
                         color: 'var(--color-text-muted)',
-                        marginTop: 4,
+                        marginTop: 6,
                         display: 'flex',
                         alignItems: 'center',
                         gap: 4,
@@ -358,24 +281,23 @@ export default function TrackingClient({ order, companyName }: TrackingClientPro
         </div>
       </div>
 
-      {/* Ready message */}
+      {/* Mensaje de entrega */}
       {order.status === 'entregada' && (
         <div
-          className="animate-slide-up"
+          className="card animate-slide-up"
           style={{
             marginTop: 24,
-            padding: 20,
-            background: 'rgba(16,185,129,0.1)',
-            border: '1px solid rgba(16,185,129,0.25)',
-            borderRadius: 14,
+            padding: 24,
+            background: 'linear-gradient(180deg, rgba(16,185,129,0.12), rgba(16,185,129,0.04))',
+            border: '1px solid rgba(16,185,129,0.3)',
             textAlign: 'center',
           }}
         >
-          <p style={{ fontSize: 24, marginBottom: 8 }}>🎉</p>
-          <p style={{ fontWeight: 700, fontSize: 16, color: 'var(--color-success-text)' }}>
+          <p style={{ fontSize: 26, marginBottom: 8 }}>🎉</p>
+          <p style={{ fontWeight: 800, fontSize: 16.5, color: 'var(--color-success-text)' }}>
             ¡Tu proyecto está listo!
           </p>
-          <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 6 }}>
+          <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 8 }}>
             Ya entregamos «{order.project_name}».
             <br />
             ¡Gracias por confiar en {companyName}!
@@ -383,14 +305,13 @@ export default function TrackingClient({ order, companyName }: TrackingClientPro
         </div>
       )}
 
-      {/* Footer */}
+      {/* Pie */}
       <p
         style={{
           textAlign: 'center',
           color: 'var(--color-text-muted)',
           fontSize: 11,
           marginTop: 32,
-          paddingBottom: 16,
         }}
       >
         {companyName} © {new Date().getFullYear()} • Esta página se actualiza en tiempo real
@@ -409,12 +330,12 @@ function Row({
   value: string;
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      {icon && <span style={{ color: 'var(--color-text-muted)' }}>{icon}</span>}
-      <span style={{ fontSize: 12, color: 'var(--color-text-muted)', minWidth: 60 }}>
+    <div className="meta-row">
+      {icon && <span className="meta-icon">{icon}</span>}
+      <span className="meta-key" style={{ minWidth: 62 }}>
         {label}
       </span>
-      <span style={{ fontSize: 14, fontWeight: 500 }}>{value}</span>
+      <span className="meta-value">{value}</span>
     </div>
   );
 }

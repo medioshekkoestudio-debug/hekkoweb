@@ -20,6 +20,8 @@ export default function TopBar({ profile }: TopBarProps) {
     router.replace('/login');
   }
 
+  const firstName = profile.full_name?.split(' ')[0] ?? '';
+
   return (
     <header
       style={{
@@ -27,80 +29,74 @@ export default function TopBar({ profile }: TopBarProps) {
         top: 0,
         left: 0,
         right: 0,
-        height: 'var(--top-bar-height)',
-        background: 'rgba(255,255,255,0.95)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
+        height: 'calc(var(--top-bar-height) + env(safe-area-inset-top))',
+        background: 'rgba(255,255,255,0.82)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
         borderBottom: '1px solid var(--color-border)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        gap: 12,
         padding: '0 16px',
         zIndex: 50,
         paddingTop: 'env(safe-area-inset-top)',
       }}
     >
       {/* Logo + rol */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-        <HekkoLogo height={24} />
-        <span style={{ width: 1, height: 20, background: 'var(--color-border)', flexShrink: 0 }} />
-        <p
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+        <HekkoLogo height={26} />
+        <span
           style={{
-            fontSize: 12,
-            fontWeight: 600,
-            color: 'var(--color-text-secondary)',
+            fontSize: 10.5,
+            fontWeight: 700,
+            letterSpacing: '0.07em',
+            textTransform: 'uppercase',
+            color: 'var(--color-brand-500)',
+            background: 'var(--color-brand-50)',
+            border: '1px solid var(--color-brand-100)',
+            borderRadius: 999,
+            padding: '3px 9px',
             whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
+            flexShrink: 0,
           }}
         >
           {profile.role === 'admin' ? 'Administrador' : 'Estratega'}
-        </p>
+        </span>
       </div>
 
-      {/* Avatar + Logout */}
+      {/* Nombre + avatar + salir */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-        <div
+        <span
           style={{
-            width: 34,
-            height: 34,
-            borderRadius: '50%',
-            background: 'var(--gradient-dark)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 12,
-            fontWeight: 700,
-            color: '#fff',
+            fontSize: 13,
+            fontWeight: 600,
+            color: 'var(--color-text-secondary)',
+            maxWidth: 110,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
           }}
+        >
+          {firstName}
+        </span>
+
+        <div
+          className="avatar"
+          style={{ width: 34, height: 34, fontSize: 12 }}
+          aria-hidden="true"
         >
           {getInitials(profile.full_name)}
         </div>
+
         <button
           onClick={handleLogout}
-          style={{
-            background: 'var(--color-surface-2)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 8,
-            padding: '6px 10px',
-            color: 'var(--color-text-secondary)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 5,
-            fontSize: 12,
-            fontWeight: 500,
-            transition: 'all 0.15s',
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.color = 'var(--color-text-primary)';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.color = 'var(--color-text-secondary)';
-          }}
+          className="action-pill"
+          title="Cerrar sesión"
+          aria-label="Cerrar sesión"
+          style={{ padding: 9 }}
         >
-          <LogOut size={14} />
-          Salir
+          <LogOut size={15} />
         </button>
       </div>
     </header>

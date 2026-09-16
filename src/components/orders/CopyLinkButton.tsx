@@ -40,20 +40,7 @@ export default function CopyLinkButton({
     <button
       type="button"
       onClick={handleCopy}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 6,
-        padding: '8px 14px',
-        background: copied ? 'rgba(52,211,153,0.12)' : 'var(--color-surface-2)',
-        color: copied ? 'var(--color-success-text)' : 'var(--color-text-secondary)',
-        borderRadius: 8,
-        fontSize: 13,
-        fontWeight: 600,
-        border: copied ? '1px solid rgba(52,211,153,0.3)' : '1px solid var(--color-border)',
-        cursor: 'pointer',
-        transition: 'all 0.15s ease',
-      }}
+      className={`action-pill${copied ? ' action-pill-success' : ''}`}
     >
       {copied ? <Check size={14} /> : <Copy size={14} />}
       {copied ? 'Copiado' : label}

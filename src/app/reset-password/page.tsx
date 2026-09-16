@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Lock, ShieldCheck, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import HekkoLogo from '@/components/brand/HekkoLogo';
 
 // Página a la que llega el usuario desde el correo de "restablecer contraseña".
 // El cliente de Supabase detecta el token de recuperación en la URL y crea una
@@ -84,110 +85,114 @@ export default function ResetPasswordPage() {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px 20px',
-        background:
-          'radial-gradient(ellipse at top, rgba(43,161,183,0.14) 0%, transparent 60%), var(--color-bg)',
       }}
     >
-      <div
-        className="animate-slide-up"
-        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, marginBottom: 28 }}
-      >
-        <div
-          style={{
-            width: 64,
-            height: 64,
-            background: 'var(--gradient-dark)',
-            borderRadius: 18,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 8px 32px rgba(13,102,122,0.3)',
-          }}
-        >
-          <ShieldCheck size={32} color="#fff" strokeWidth={2.5} />
+      <div style={{ width: '100%', maxWidth: 400 }}>
+        {/* Marca */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
+          <HekkoLogo height={30} />
         </div>
-        <h1 style={{ fontSize: 22, fontWeight: 800 }}>Restablecer contraseña</h1>
-      </div>
 
-      <div className="card animate-slide-up glass" style={{ width: '100%', maxWidth: 400, padding: 28 }}>
-        {done ? (
-          <div style={{ textAlign: 'center' }}>
-            <CheckCircle2 size={40} color="var(--color-success-text)" style={{ margin: '0 auto 12px' }} />
-            <p style={{ fontWeight: 700, marginBottom: 6 }}>¡Contraseña actualizada!</p>
-            <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
-              Te llevamos al inicio de sesión...
-            </p>
+        {/* Cabecera */}
+        <div className="hero animate-slide-up" style={{ marginBottom: 14, textAlign: 'center' }}>
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              margin: '0 auto 12px',
+              background: 'rgba(255,255,255,0.14)',
+              border: '1px solid rgba(255,255,255,0.25)',
+              borderRadius: 18,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <ShieldCheck size={28} color="#fff" strokeWidth={2.2} />
           </div>
-        ) : checking ? (
-          <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', textAlign: 'center' }}>
-            Verificando el enlace...
-          </p>
-        ) : !ready ? (
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ fontWeight: 700, marginBottom: 8 }}>Enlace inválido o vencido</p>
-            <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 16 }}>
-              El enlace de restablecimiento no es válido o ya expiró. Pide uno nuevo.
-            </p>
-            <Button variant="secondary" fullWidth onClick={() => router.replace('/login')}>
-              Ir al inicio de sesión
-            </Button>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
-              Escribe tu nueva contraseña.
-            </p>
-            <div className="form-field">
-              <label className="form-label" htmlFor="new-pass">Nueva contraseña</label>
-              <div style={{ position: 'relative' }}>
-                <Lock size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
-                <input
-                  id="new-pass"
-                  type={showPass ? 'text' : 'password'}
-                  className="form-input"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  style={{ paddingLeft: 40, paddingRight: 44 }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPass(!showPass)}
-                  style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', display: 'flex' }}
-                >
-                  {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
-                </button>
-              </div>
-            </div>
-            <div className="form-field">
-              <label className="form-label" htmlFor="confirm-pass">Repetir contraseña</label>
-              <div style={{ position: 'relative' }}>
-                <Lock size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
-                <input
-                  id="confirm-pass"
-                  type={showPass ? 'text' : 'password'}
-                  className="form-input"
-                  placeholder="••••••••"
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  required
-                  style={{ paddingLeft: 40 }}
-                />
-              </div>
-            </div>
+          <h1 className="hero-title">Restablecer contraseña</h1>
+          <p className="hero-sub">Elige una clave nueva para tu cuenta.</p>
+        </div>
 
-            {error && (
-              <div style={{ padding: '10px 14px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, color: 'var(--color-danger-text)', fontSize: 13 }}>
-                {error}
+        <div className="card animate-slide-up" style={{ padding: 24 }}>
+          {done ? (
+            <div style={{ textAlign: 'center' }}>
+              <CheckCircle2 size={40} color="var(--color-success-text)" style={{ margin: '0 auto 12px' }} />
+              <p style={{ fontWeight: 700, marginBottom: 6 }}>¡Contraseña actualizada!</p>
+              <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+                Te llevamos al inicio de sesión...
+              </p>
+            </div>
+          ) : checking ? (
+            <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', textAlign: 'center' }}>
+              Verificando el enlace...
+            </p>
+          ) : !ready ? (
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ fontWeight: 700, marginBottom: 8 }}>Enlace inválido o vencido</p>
+              <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 16 }}>
+                El enlace de restablecimiento no es válido o ya expiró. Pide uno nuevo.
+              </p>
+              <Button variant="secondary" fullWidth onClick={() => router.replace('/login')}>
+                Ir al inicio de sesión
+              </Button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div className="form-field">
+                <label className="form-label" htmlFor="new-pass">Nueva contraseña</label>
+                <div style={{ position: 'relative' }}>
+                  <Lock size={15} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+                  <input
+                    id="new-pass"
+                    type={showPass ? 'text' : 'password'}
+                    className="form-input"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    style={{ paddingLeft: 40, paddingRight: 44 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPass(!showPass)}
+                    aria-label={showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', display: 'flex' }}
+                  >
+                    {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
               </div>
-            )}
 
-            <Button type="submit" variant="primary" fullWidth size="lg" loading={loading}>
-              Guardar nueva contraseña
-            </Button>
-          </form>
-        )}
+              <div className="form-field">
+                <label className="form-label" htmlFor="confirm-pass">Repetir contraseña</label>
+                <div style={{ position: 'relative' }}>
+                  <Lock size={15} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+                  <input
+                    id="confirm-pass"
+                    type={showPass ? 'text' : 'password'}
+                    className="form-input"
+                    placeholder="••••••••"
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    required
+                    style={{ paddingLeft: 40 }}
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <div style={{ padding: '11px 14px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.22)', borderRadius: 10, color: 'var(--color-danger-text)', fontSize: 13 }}>
+                  {error}
+                </div>
+              )}
+
+              <Button type="submit" variant="primary" fullWidth size="lg" loading={loading}>
+                Guardar nueva contraseña
+              </Button>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );

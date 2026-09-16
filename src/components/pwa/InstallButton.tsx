@@ -32,20 +32,8 @@ export default function InstallButton() {
         await deferred.userChoice;
         setDeferred(null);
       }}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 6,
-        marginTop: 16,
-        padding: '9px 16px',
-        background: 'var(--color-surface-2)',
-        border: '1px solid var(--color-border)',
-        borderRadius: 8,
-        color: 'var(--color-text-primary)',
-        fontSize: 13,
-        fontWeight: 600,
-        cursor: 'pointer',
-      }}
+      className="action-pill"
+      style={{ marginTop: 16 }}
     >
       <Download size={15} />
       Instalar app

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { Order, Profile, OrderStatus } from '@/lib/types';
 import OrderCard from '@/components/orders/OrderCard';
+import OrderBoard from '@/components/orders/OrderBoard';
 import OrderForm from '@/components/orders/OrderForm';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
@@ -14,7 +15,8 @@ interface EstrategaOrdenesClientProps {
   profile: Profile;
 }
 
-type FilterKey = 'mine' | 'all' | OrderStatus;
+/** El estado ya lo separa el tablero; aquí solo se elige de quién son. */
+type ScopeKey = 'mine' | 'all';
 
 export default function EstrategaOrdenesClient({
   initialOrders,
@@ -23,18 +25,13 @@ export default function EstrategaOrdenesClient({
 }: EstrategaOrdenesClientProps) {
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [showCreate, setShowCreate] = useState(false);
-  const [filter, setFilter] = useState<FilterKey>('mine');
+  const [scope, setScope] = useState<ScopeKey>('mine');
   const [search, setSearch] = useState('');
 
   const mineCount = orders.filter((o) => o.assigned_strategist_id === profile.id).length;
 
   const filtered = orders.filter((o) => {
-    const matchScope =
-      filter === 'mine'
-        ? o.assigned_strategist_id === profile.id
-        : filter === 'all'
-        ? true
-        : o.status === filter;
+    const matchScope = scope === 'mine' ? o.assigned_strategist_id === profile.id : true;
     const q = search.toLowerCase();
     const matchSearch =
       !q ||
@@ -61,51 +58,51 @@ export default function EstrategaOrdenesClient({
     setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
   }
 
-  const FILTERS: { value: FilterKey; label: string }[] = [
+  const SCOPES: { value: ScopeKey; label: string }[] = [
     { value: 'mine', label: `Mis órdenes (${mineCount})` },
     { value: 'all', label: `Todas (${orders.length})` },
-    { value: 'sin_estratega', label: 'Sin asignar' },
-    { value: 'con_estratega', label: 'En progreso' },
-    { value: 'entregada', label: 'Entregadas' },
   ];
 
   return (
-    <div className="animate-fade-in" style={{ paddingTop: 16 }}>
-      {/* Header */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 4,
-        }}
-      >
-        <div>
-          <h1 style={{ fontSize: 20, fontWeight: 800 }}>
-            Hola, {profile.full_name.split(' ')[0]} 👋
-          </h1>
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: 13, marginTop: 2 }}>
-            {mineCount === 0
-              ? 'No tienes órdenes asignadas'
-              : `Tienes ${mineCount} orden${mineCount > 1 ? 'es' : ''} asignada${mineCount > 1 ? 's' : ''}`}
-          </p>
+    <div className="animate-fade-in" style={{ paddingTop: 18 }}>
+      {/* Saludo */}
+      <div className="hero" style={{ marginBottom: 16 }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            gap: 12,
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <h1 className="hero-title">
+              Hola, {profile.full_name.split(' ')[0]} 👋
+            </h1>
+            <p className="hero-sub">
+              {mineCount === 0
+                ? 'No tienes órdenes asignadas'
+                : `Tienes ${mineCount} orden${mineCount > 1 ? 'es' : ''} asignada${mineCount > 1 ? 's' : ''}`}
+            </p>
+          </div>
+          <Button variant="secondary" size="sm" onClick={() => setShowCreate(true)}>
+            <Plus size={15} />
+            Nueva
+          </Button>
         </div>
-        <Button variant="primary" size="sm" onClick={() => setShowCreate(true)}>
-          <Plus size={15} />
-          Nueva
-        </Button>
       </div>
 
-      {/* Search */}
-      <div style={{ position: 'relative', margin: '16px 0 12px' }}>
+      {/* Buscador */}
+      <div style={{ position: 'relative', marginBottom: 14 }}>
         <Search
           size={15}
           style={{
             position: 'absolute',
-            left: 12,
+            left: 14,
             top: '50%',
             transform: 'translateY(-50%)',
             color: 'var(--color-text-muted)',
+            pointerEvents: 'none',
           }}
         />
         <input
@@ -113,74 +110,52 @@ export default function EstrategaOrdenesClient({
           placeholder="Buscar por cliente, proyecto o teléfono..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ paddingLeft: 36 }}
+          style={{ paddingLeft: 40 }}
           id="orders-search"
         />
       </div>
 
-      {/* Filter tabs */}
-      <div
-        style={{
-          display: 'flex',
-          gap: 6,
-          marginBottom: 16,
-          overflowX: 'auto',
-          paddingBottom: 4,
-        }}
-      >
-        {FILTERS.map((f) => (
+      {/* De quién son */}
+      <div className="chip-row no-scrollbar">
+        {SCOPES.map((s) => (
           <button
-            key={f.value}
-            onClick={() => setFilter(f.value)}
-            style={{
-              padding: '6px 14px',
-              borderRadius: 999,
-              fontSize: 12,
-              fontWeight: 600,
-              border: '1px solid',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              transition: 'all 0.15s',
-              background:
-                filter === f.value ? 'var(--color-brand-500)' : 'var(--color-surface-2)',
-              color: filter === f.value ? '#fff' : 'var(--color-text-secondary)',
-              borderColor:
-                filter === f.value ? 'var(--color-brand-500)' : 'var(--color-border)',
-            }}
+            key={s.value}
+            className="chip"
+            aria-pressed={scope === s.value}
+            onClick={() => setScope(s.value)}
           >
-            {f.label}
+            {s.label}
           </button>
         ))}
       </div>
 
-      {/* List */}
-      {filtered.length === 0 ? (
-        <div className="empty-state">
-          <ClipboardList size={48} />
-          <p>
-            {search
-              ? 'No hay resultados para tu búsqueda'
-              : filter === 'mine'
-              ? 'No tienes órdenes asignadas'
-              : 'No hay órdenes con este filtro'}
-          </p>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {filtered.map((order) => (
-            <OrderCard
-              key={order.id}
-              order={order}
-              strategists={strategists}
-              role="strategist"
-              currentUserId={profile.id}
-              onStatusChange={handleStatusChange}
-              onUpdate={handleUpdate}
-              onDelete={handleDelete}
-            />
-          ))}
-        </div>
-      )}
+      {/* Tablero por estado */}
+      <OrderBoard
+        orders={filtered}
+        emptyState={
+          <div className="empty-state">
+            <ClipboardList size={48} />
+            <p>
+              {search
+                ? 'No hay resultados para tu búsqueda'
+                : scope === 'mine'
+                ? 'No tienes órdenes asignadas'
+                : 'No hay órdenes aún'}
+            </p>
+          </div>
+        }
+        renderCard={(order) => (
+          <OrderCard
+            order={order}
+            strategists={strategists}
+            role="strategist"
+            currentUserId={profile.id}
+            onStatusChange={handleStatusChange}
+            onUpdate={handleUpdate}
+            onDelete={handleDelete}
+          />
+        )}
+      />
 
       {/* Create Modal */}
       <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title="Nueva orden">

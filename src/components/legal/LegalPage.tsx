@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import HekkoLogo from '@/components/brand/HekkoLogo';
 
 export default function LegalPage({
   title,
@@ -11,31 +12,44 @@ export default function LegalPage({
   children: React.ReactNode;
 }) {
   return (
-    <div style={{ maxWidth: 760, margin: '0 auto', padding: '28px 20px 60px' }}>
-      <Link
-        href="/login"
+    <div style={{ maxWidth: 760, margin: '0 auto', padding: '24px 20px 60px' }}>
+      <div
         style={{
-          display: 'inline-flex',
+          display: 'flex',
           alignItems: 'center',
-          gap: 6,
-          color: 'var(--color-text-secondary)',
-          textDecoration: 'none',
-          fontSize: 13,
-          marginBottom: 18,
+          justifyContent: 'space-between',
+          gap: 12,
+          marginBottom: 20,
         }}
       >
-        <ArrowLeft size={15} /> Volver
-      </Link>
-      <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 4 }}>{title}</h1>
-      <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 24 }}>
-        Última actualización: {updated}
-      </p>
+        <Link href="/login" className="action-pill">
+          <ArrowLeft size={15} /> Volver
+        </Link>
+        <HekkoLogo height={22} />
+      </div>
+
+      {/* Cabecera de marca */}
+      <div className="hero" style={{ marginBottom: 20 }}>
+        <h1 className="hero-title">{title}</h1>
+        <p className="hero-sub">Última actualización: {updated}</p>
+      </div>
+
       <style>{`
-        .legal-prose h2 { font-size: 16px; font-weight: 700; color: var(--color-text-primary); margin: 22px 0 8px; }
+        .legal-prose h2 { font-size: 16px; font-weight: 700; color: var(--color-text-primary); margin: 24px 0 8px; }
+        .legal-prose h2:first-child { margin-top: 0; }
         .legal-prose p { margin: 0 0 12px; }
         .legal-prose strong { color: var(--color-text-primary); }
       `}</style>
-      <div className="legal-prose" style={{ fontSize: 14, lineHeight: 1.7, color: 'var(--color-text-secondary)' }}>
+
+      <div
+        className="card legal-prose"
+        style={{
+          fontSize: 14.5,
+          lineHeight: 1.75,
+          color: 'var(--color-text-secondary)',
+          padding: 24,
+        }}
+      >
         {children}
       </div>
     </div>

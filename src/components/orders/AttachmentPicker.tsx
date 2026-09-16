@@ -47,18 +47,7 @@ export default function AttachmentPicker({ onFiles, onClose }: AttachmentPickerP
       <div className="modal-content" style={{ maxWidth: 420 }}>
         <div className="modal-header">
           <h2 className="modal-title">{title}</h2>
-          <button
-            onClick={onClose}
-            aria-label="Cerrar"
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--color-text-secondary)',
-              cursor: 'pointer',
-              padding: 4,
-              display: 'flex',
-            }}
-          >
+          <button onClick={onClose} aria-label="Cerrar" className="action-pill" style={{ padding: 8 }}>
             <X size={18} />
           </button>
         </div>
@@ -165,19 +154,14 @@ function Option({
   return (
     <button
       onClick={onClick}
+      className="action-pill"
       style={{
-        display: 'flex',
-        alignItems: 'center',
         gap: 12,
         width: '100%',
-        padding: '14px 14px',
-        background: 'var(--color-surface-2)',
-        border: '1px solid var(--color-border)',
-        borderRadius: 10,
+        padding: '12px 14px',
+        borderRadius: 12,
         color: 'var(--color-text-primary)',
         fontSize: 14,
-        fontWeight: 600,
-        cursor: 'pointer',
         textAlign: 'left',
       }}
     >
@@ -188,9 +172,10 @@ function Option({
           justifyContent: 'center',
           width: 38,
           height: 38,
-          borderRadius: 8,
-          background: 'rgba(246,160,12,0.12)',
-          color: 'var(--color-brand-400)',
+          borderRadius: 10,
+          background: 'var(--color-brand-50)',
+          border: '1px solid var(--color-brand-100)',
+          color: 'var(--color-brand-500)',
           flexShrink: 0,
         }}
       >

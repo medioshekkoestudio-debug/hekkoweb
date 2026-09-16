@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Order, Profile, Strategist, OrderStatus } from '@/lib/types';
-import { SERVICE_LABELS } from '@/lib/types';
+import { serviceLabel } from '@/lib/types';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import CopyLinkButton from '@/components/orders/CopyLinkButton';
 import StrategistSelect from '@/components/orders/StrategistSelect';
 import StrategistForm from '@/components/strategists/StrategistForm';
-import { formatDate, buildWhatsAppLink, buildTrackingMessage, openWhatsApp } from '@/lib/utils';
+import { formatDate, buildWhatsAppLink, buildTrackingMessage, openWhatsApp, getInitials } from '@/lib/utils';
 import { Briefcase, Tag, User, Phone, MessageCircle, Edit2, Trash2, ChevronRight, UserCheck, CheckCircle2 } from 'lucide-react';
 
 interface OrderCardProps {
@@ -29,6 +29,13 @@ interface OrderCardProps {
 }
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
+// Color del acento lateral según el estado de la orden.
+const ACCENT: Record<OrderStatus, string> = {
+  sin_estratega: 'var(--color-border-strong)',
+  con_estratega: 'var(--color-accent)',
+  entregada: 'var(--color-success)',
+};
 
 export default function OrderCard({
   order,
@@ -121,62 +128,62 @@ export default function OrderCard({
 
   return (
     <article
-      className="card animate-fade-in"
-      style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
+      className="card card-accent animate-fade-in"
+      style={
+        {
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 14,
+          '--accent-color': ACCENT[order.status],
+        } as React.CSSProperties
+      }
     >
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <p style={{ fontWeight: 700, fontSize: 16 }}>{clientName}</p>
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: 12, marginTop: 2 }}>
-            {formatDate(order.created_at)}
-          </p>
+      {/* Header: cliente + estado */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 11, minWidth: 0 }}>
+          <div className="avatar" style={{ width: 40, height: 40, fontSize: 13 }} aria-hidden="true">
+            {getInitials(clientName)}
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontWeight: 700, fontSize: 15.5, letterSpacing: '-0.01em' }}>{clientName}</p>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: 11.5, marginTop: 2 }}>
+              {formatDate(order.created_at)}
+            </p>
+          </div>
         </div>
         <Badge status={order.status} />
       </div>
 
-      <div style={{ height: 1, background: 'var(--color-border)' }} />
-
-      {/* Details */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {/* Detalles */}
+      <div className="meta-list">
         <InfoRow icon={<Briefcase size={14} />} text={order.project_name} />
-        <InfoRow icon={<Tag size={14} />} text={SERVICE_LABELS[order.service_type]} />
+        <InfoRow icon={<Tag size={14} />} text={serviceLabel(order.service_type)} />
         <InfoRow icon={<Phone size={14} />} text={order.client_whatsapp} />
         {order.assigned_strategist && (
           <InfoRow
             icon={<User size={14} />}
             text={order.assigned_strategist.full_name}
-            color="var(--color-brand-400)"
+            color="var(--color-brand-500)"
           />
         )}
       </div>
 
-      {/* Actions */}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div className="divider" style={{ margin: 0 }} />
+
+      {/* Acciones */}
+      <div className="action-row">
         {/* WhatsApp share */}
         <a
           href={waLink}
           target="_blank"
           rel="noopener noreferrer"
+          className="action-pill action-pill-wa"
           onClick={(e) => {
             e.preventDefault();
             openWhatsApp(
               order.client_whatsapp,
               buildTrackingMessage(order.client_first_name, order.public_token, SITE_URL, companyName)
             );
-          }}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: '8px 14px',
-            background: 'rgba(37,211,102,0.12)',
-            color: 'var(--color-whatsapp-text)',
-            borderRadius: 8,
-            fontSize: 13,
-            fontWeight: 600,
-            border: '1px solid rgba(37,211,102,0.2)',
-            textDecoration: 'none',
           }}
         >
           <MessageCircle size={14} />
@@ -187,9 +194,8 @@ export default function OrderCard({
         <CopyLinkButton url={trackingUrl} />
 
         {/* Detail / Stages */}
-        <Button
-          variant="secondary"
-          size="sm"
+        <button
+          className="action-pill"
           onClick={() => {
             const base = role === 'admin' ? '/admin' : '/estratega';
             router.push(`${base}/ordenes/${order.id}`);
@@ -197,19 +203,14 @@ export default function OrderCard({
         >
           <ChevronRight size={14} />
           Ver orden
-        </Button>
+        </button>
 
         {/* Strategist: self-assign */}
         {role === 'strategist' && order.assigned_strategist_id !== currentUserId && (
-          <Button
-            variant="secondary"
-            size="sm"
-            loading={loading}
-            onClick={handleAssignSelf}
-          >
+          <button className="action-pill" disabled={loading} onClick={handleAssignSelf}>
             <UserCheck size={14} />
             Asignarme
-          </Button>
+          </button>
         )}
 
         {/* Strategist: mark as ready when working on it */}
@@ -229,9 +230,15 @@ export default function OrderCard({
 
         {/* Strategist: delete own orders (assigned to or created by them) */}
         {role === 'strategist' && isOwn && (
-          <Button variant="danger" size="sm" loading={loading} onClick={handleDelete}>
+          <button
+            className="action-pill action-pill-danger"
+            disabled={loading}
+            onClick={handleDelete}
+            aria-label="Eliminar orden"
+            title="Eliminar orden"
+          >
             <Trash2 size={13} />
-          </Button>
+          </button>
         )}
 
         {/* Admin: asignar estratega con la lista desplegable propia (si no tiene uno) */}
@@ -255,11 +262,12 @@ export default function OrderCard({
         {role === 'admin' && nextStatuses[order.status].map((s) => (
           <Button
             key={s.value}
-            variant="secondary"
+            variant="primary"
             size="sm"
             loading={loading}
             onClick={() => handleStatusChange(s.value)}
           >
+            <CheckCircle2 size={14} />
             {s.label}
           </Button>
         ))}
@@ -267,16 +275,23 @@ export default function OrderCard({
         {/* Admin actions */}
         {role === 'admin' && (
           <>
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
+              className="action-pill"
               onClick={() => router.push(`/admin/ordenes/${order.id}?edit=1`)}
+              aria-label="Editar orden"
+              title="Editar orden"
             >
               <Edit2 size={13} />
-            </Button>
-            <Button variant="danger" size="sm" loading={loading} onClick={handleDelete}>
+            </button>
+            <button
+              className="action-pill action-pill-danger"
+              disabled={loading}
+              onClick={handleDelete}
+              aria-label="Eliminar orden"
+              title="Eliminar orden"
+            >
               <Trash2 size={13} />
-            </Button>
+            </button>
           </>
         )}
       </div>
@@ -312,13 +327,16 @@ function InfoRow({
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 8,
+        gap: 9,
         color: color || 'var(--color-text-secondary)',
         fontSize: 13,
+        fontWeight: color ? 600 : 400,
       }}
     >
-      {icon}
-      <span>{text}</span>
+      <span className="meta-icon" style={color ? { color } : undefined}>
+        {icon}
+      </span>
+      <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>{text}</span>
     </div>
   );
 }

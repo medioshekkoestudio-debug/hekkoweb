@@ -89,6 +89,7 @@ No hay registro público: las cuentas del equipo las crea el administrador desde
 | `company_settings` | Nombre y WhatsApp de Hekko. **Fila única `id = 1`.** (`logo_url` queda sin uso: el logo es fijo, ver *Marca*.) |
 | `profiles` | Usuarios del equipo (nombre, teléfono, rol, activo). `id` = `auth.users.id`. El correo vive en `auth.users`. |
 | `orders` | Órdenes de cliente: cliente, WhatsApp, `service_type`, `project_name`, estratega asignado, estado, `public_token` único para el seguimiento. |
+| `services` | Catálogo de servicios (`slug`, `label`, `active`, `position`). `orders.service_type` apunta aquí. El equipo lo amplía desde el formulario de la orden. |
 | `order_stages` | Etapas de cada orden (nombre, descripción, estado, posición). |
 | `stage_attachments` | Archivos de cada etapa (imágenes, video, audio, documentos). |
 
@@ -101,7 +102,11 @@ No hay registro público: las cuentas del equipo las crea el administrador desde
 | `user_role` | `admin`, `strategist` |
 | `order_status` | `sin_estratega`, `con_estratega`, `entregada` |
 | `stage_status` | `pending`, `in_progress`, `done` |
-| `service_type` | `diseno_grafico`, `marketing`, `desarrollo_web` |
+
+> `service_type` **ya no es un enum.** Desde
+> [`0003_hekko_services.sql`](supabase/migrations/0003_hekko_services.sql) es una
+> columna de texto con clave foránea a `services.slug`, para poder agregar
+> servicios desde la app sin tocar la base.
 
 ### La etapa de posición 0
 
@@ -223,8 +228,11 @@ src/
   declara `dynamic = 'force-dynamic'` **y** `fetchCache = 'force-no-store'`. Sin el
   segundo, Next.js cacheaba las consultas a Supabase (la página es pública, sin
   cookies) y no aparecían los archivos recién subidos.
-- **Las etiquetas de servicio viven en un solo sitio:** `SERVICE_LABELS` en
-  `src/lib/types.ts`. Si agregas un valor al enum `service_type` en la base, agrégalo
-  también ahí o se romperá el `Record` tipado.
+- **Los servicios se guardan de dos formas, a propósito.** Los tres originales
+  conservan el slug del enum antiguo (`diseno_grafico`) y se traducen con
+  `SERVICE_LABELS` en `src/lib/types.ts`; los que se agregan desde la app guardan
+  directamente su nombre visible. Por eso hay que mostrarlos **siempre** con
+  `serviceLabel()` y nunca leyendo `SERVICE_LABELS` a mano: así ninguna pantalla
+  necesita cargar el catálogo solo para pintar una etiqueta.
 - **Al crear un estratega, la app arma un mensaje de WhatsApp** con sus credenciales
   (`buildCredentialsMessage` en `utils.ts`), para mandárselas de una vez.

@@ -3,9 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Order, Profile, Strategist, OrderStatus } from '@/lib/types';
-import { SERVICE_LABELS } from '@/lib/types';
+import { serviceLabel } from '@/lib/types';
 import Badge from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import OrderForm from '@/components/orders/OrderForm';
 import StrategistForm from '@/components/strategists/StrategistForm';
@@ -31,6 +30,9 @@ import {
   Phone,
   Calendar,
   ExternalLink,
+  Info,
+  ListChecks,
+  Paperclip,
 } from 'lucide-react';
 
 interface OrderDetailClientProps {
@@ -49,6 +51,8 @@ const STATUS_OPTIONS: { value: OrderStatus; label: string }[] = [
   { value: 'entregada', label: 'Entregado' },
 ];
 
+type TabKey = 'resumen' | 'etapas' | 'archivos';
+
 export default function OrderDetailClient({
   order: initialOrder,
   strategists: initialStrategists,
@@ -62,6 +66,7 @@ export default function OrderDetailClient({
   const [showAddStrategist, setShowAddStrategist] = useState(false);
   const [changingStatus, setChangingStatus] = useState(false);
   const [assigning, setAssigning] = useState(false);
+  const [tab, setTab] = useState<TabKey>('resumen');
 
   const clientName = `${order.client_first_name} ${order.client_last_name}`;
   const trackingUrl = `${SITE_URL}/tracking/${order.public_token}`;
@@ -117,183 +122,186 @@ export default function OrderDetailClient({
   // la "recepción" (archivos adjuntados al crear la orden), que se muestra
   // aparte como información principal (ver <InitialAttachments />).
   const serviceStages = stages.filter((s) => s.position > 0);
+  const intakeCount = stages.find((s) => s.position === 0)?.attachments?.length ?? 0;
+
+  const TABS: { key: TabKey; label: string; icon: React.ReactNode; count?: number }[] = [
+    { key: 'resumen', label: 'Resumen', icon: <Info size={14} /> },
+    { key: 'etapas', label: 'Etapas', icon: <ListChecks size={14} />, count: serviceStages.length },
+    { key: 'archivos', label: 'Archivos', icon: <Paperclip size={14} />, count: intakeCount },
+  ];
 
   return (
-    <div className="animate-fade-in" style={{ paddingTop: 16 }}>
-      {/* Back */}
-      <button
-        onClick={() => router.back()}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          color: 'var(--color-text-secondary)',
-          fontSize: 14,
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          marginBottom: 16,
-          padding: 0,
-        }}
-      >
-        <ArrowLeft size={16} />
+    <div className="animate-fade-in" style={{ paddingTop: 18 }}>
+      {/* Volver */}
+      <button onClick={() => router.back()} className="action-pill" style={{ marginBottom: 14 }}>
+        <ArrowLeft size={15} />
         Volver
       </button>
 
-      {/* Order header */}
-      <div className="card" style={{ marginBottom: 16 }}>
+      {/* Cabecera de la orden */}
+      <div className="hero" style={{ marginBottom: 14 }}>
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'flex-start',
-            marginBottom: 14,
+            gap: 12,
           }}
         >
-          <div>
-            <h1 style={{ fontSize: 20, fontWeight: 800 }}>{clientName}</h1>
-            <p style={{ color: 'var(--color-text-muted)', fontSize: 12, marginTop: 2 }}>
-              Orden #{order.id.slice(0, 8).toUpperCase()}
-            </p>
+          <div style={{ minWidth: 0 }}>
+            <h1 className="hero-title">{clientName}</h1>
+            <p className="hero-sub">Orden #{order.id.slice(0, 8).toUpperCase()}</p>
           </div>
           <Badge status={order.status} />
         </div>
+      </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <InfoRow icon={<Briefcase size={14} />} label="Proyecto" value={order.project_name} />
-          <InfoRow icon={<Tag size={14} />} label="Servicio" value={SERVICE_LABELS[order.service_type]} />
-          <InfoRow icon={<Phone size={14} />} label="WhatsApp" value={order.client_whatsapp} />
-          <InfoRow
-            icon={<User size={14} />}
-            label="Estratega"
-            value={order.assigned_strategist?.full_name ?? 'Sin asignar'}
-          />
-          <InfoRow
-            icon={<Calendar size={14} />}
-            label="Creado"
-            value={formatDate(order.created_at)}
-          />
-        </div>
+      {/* Pestañas */}
+      <div className="tabs" role="tablist" aria-label="Secciones de la orden">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            role="tab"
+            id={`tab-${t.key}`}
+            aria-selected={tab === t.key}
+            aria-controls={`panel-${t.key}`}
+            className="tab"
+            onClick={() => setTab(t.key)}
+          >
+            {t.icon}
+            {t.label}
+            {t.count !== undefined && <span className="tab-count">{t.count}</span>}
+          </button>
+        ))}
+      </div>
 
-        {order.notes && (
-          <>
-            <div style={{ height: 1, background: 'var(--color-border)', margin: '12px 0' }} />
-            <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{order.notes}</p>
-          </>
-        )}
+      {/* Resumen: información + gestión.
+          Los paneles se ocultan con display en lugar de desmontarse, para no
+          perder el estado interno de las etapas y los adjuntos al cambiar de
+          pestaña (subidas en curso, reordenamientos optimistas). */}
+      <div
+        role="tabpanel"
+        id="panel-resumen"
+        aria-labelledby="tab-resumen"
+        style={{ display: tab === 'resumen' ? 'block' : 'none' }}
+      >
+        {/* Datos */}
+        <div className="card" style={{ marginBottom: 14 }}>
+          <p className="eyebrow">Información</p>
+          <div className="meta-list">
+            <InfoRow icon={<Briefcase size={14} />} label="Proyecto" value={order.project_name} />
+            <InfoRow icon={<Tag size={14} />} label="Servicio" value={serviceLabel(order.service_type)} />
+            <InfoRow icon={<Phone size={14} />} label="WhatsApp" value={order.client_whatsapp} />
+            <InfoRow
+              icon={<User size={14} />}
+              label="Estratega"
+              value={order.assigned_strategist?.full_name ?? 'Sin asignar'}
+            />
+            <InfoRow
+              icon={<Calendar size={14} />}
+              label="Creado"
+              value={formatDate(order.created_at)}
+            />
+          </div>
 
-        <div
-          style={{
-            height: 1,
-            background: 'var(--color-border)',
-            margin: '14px 0',
-          }}
-        />
-
-        {/* Change status */}
-        <div className="form-field" style={{ marginBottom: 12 }}>
-          <label className="form-label">Cambiar estado</label>
-          <Select
-            options={STATUS_OPTIONS}
-            value={order.status}
-            onChange={(v) => handleStatusChange(v as OrderStatus)}
-            disabled={changingStatus}
-            id="order-status-select"
-          />
-        </div>
-
-        {/* Assign strategist — directamente desde el resumen, sin abrir "Editar" */}
-        <div className="form-field" style={{ marginBottom: 12 }}>
-          <label className="form-label">Asignar estratega</label>
-          <StrategistSelect
-            strategists={strategists}
-            value={order.assigned_strategist_id ?? null}
-            onChange={(id) => handleAssignStrategist(id)}
-            disabled={assigning}
-            onAddNew={() => setShowAddStrategist(true)}
-          />
-          {strategists.length === 0 && (
-            <span style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 4, display: 'block' }}>
-              No hay estrategas. Crea uno en la sección Estrategas.
-            </span>
+          {order.notes && (
+            <>
+              <div className="divider" />
+              <p className="eyebrow">Notas</p>
+              <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', whiteSpace: 'pre-wrap' }}>
+                {order.notes}
+              </p>
+            </>
           )}
         </div>
 
-        {/* Action buttons */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <a
-            href={waLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => {
-              e.preventDefault();
-              openWhatsApp(
-                order.client_whatsapp,
-                buildTrackingMessage(order.client_first_name, order.public_token, SITE_URL, companyName)
-              );
-            }}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '8px 14px',
-              background: 'rgba(37,211,102,0.12)',
-              color: 'var(--color-whatsapp-text)',
-              borderRadius: 8,
-              fontSize: 13,
-              fontWeight: 600,
-              border: '1px solid rgba(37,211,102,0.2)',
-              textDecoration: 'none',
-            }}
-          >
-            <MessageCircle size={14} />
-            Enviar tracking
-          </a>
+        {/* Gestión */}
+        <div className="card">
+          <p className="eyebrow">Gestión</p>
 
-          <a
-            href={trackingUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '8px 14px',
-              background: 'var(--color-surface-2)',
-              color: 'var(--color-text-secondary)',
-              borderRadius: 8,
-              fontSize: 13,
-              fontWeight: 600,
-              border: '1px solid var(--color-border)',
-              textDecoration: 'none',
-            }}
-          >
-            <ExternalLink size={14} />
-            Ver tracking
-          </a>
+          {/* Cambiar estado */}
+          <div className="form-field" style={{ marginBottom: 14 }}>
+            <label className="form-label">Cambiar estado</label>
+            <Select
+              options={STATUS_OPTIONS}
+              value={order.status}
+              onChange={(v) => handleStatusChange(v as OrderStatus)}
+              disabled={changingStatus}
+              id="order-status-select"
+            />
+          </div>
 
-          <CopyLinkButton url={trackingUrl} />
+          {/* Asignar estratega — directamente desde el resumen, sin abrir "Editar" */}
+          <div className="form-field" style={{ marginBottom: 16 }}>
+            <label className="form-label">Asignar estratega</label>
+            <StrategistSelect
+              strategists={strategists}
+              value={order.assigned_strategist_id ?? null}
+              onChange={(id) => handleAssignStrategist(id)}
+              disabled={assigning}
+              onAddNew={() => setShowAddStrategist(true)}
+            />
+            {strategists.length === 0 && (
+              <span style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 4, display: 'block' }}>
+                No hay estrategas. Crea uno en la sección Estrategas.
+              </span>
+            )}
+          </div>
 
-          <Button variant="secondary" size="sm" onClick={() => setShowEdit(true)}>
-            <Edit2 size={13} />
-            Editar
-          </Button>
+          <div className="divider" />
 
-          <Button variant="danger" size="sm" onClick={handleDelete}>
-            <Trash2 size={13} />
-            Eliminar
-          </Button>
+          {/* Acciones */}
+          <div className="action-row">
+            <a
+              href={waLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="action-pill action-pill-wa"
+              onClick={(e) => {
+                e.preventDefault();
+                openWhatsApp(
+                  order.client_whatsapp,
+                  buildTrackingMessage(order.client_first_name, order.public_token, SITE_URL, companyName)
+                );
+              }}
+            >
+              <MessageCircle size={14} />
+              Enviar tracking
+            </a>
+
+            <a
+              href={trackingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="action-pill"
+            >
+              <ExternalLink size={14} />
+              Ver tracking
+            </a>
+
+            <CopyLinkButton url={trackingUrl} />
+
+            <button className="action-pill" onClick={() => setShowEdit(true)}>
+              <Edit2 size={13} />
+              Editar
+            </button>
+
+            <button className="action-pill action-pill-danger" onClick={handleDelete}>
+              <Trash2 size={13} />
+              Eliminar
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Archivos adjuntados al crear la orden */}
-      <InitialAttachments orderId={order.id} stages={stages} canEdit={true} />
-
-      {/* Stages */}
-      <div style={{ marginBottom: 8 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>
-          Etapas de servicio
-        </h2>
+      {/* Etapas */}
+      <div
+        role="tabpanel"
+        id="panel-etapas"
+        aria-labelledby="tab-etapas"
+        style={{ display: tab === 'etapas' ? 'block' : 'none' }}
+      >
+        <p className="eyebrow">Etapas de servicio</p>
         <StageTimeline
           orderId={order.id}
           initialStages={serviceStages}
@@ -303,6 +311,16 @@ export default function OrderDetailClient({
           clientWhatsapp={order.client_whatsapp}
           publicToken={order.public_token}
         />
+      </div>
+
+      {/* Archivos adjuntados al crear la orden */}
+      <div
+        role="tabpanel"
+        id="panel-archivos"
+        aria-labelledby="tab-archivos"
+        style={{ display: tab === 'archivos' ? 'block' : 'none' }}
+      >
+        <InitialAttachments orderId={order.id} stages={stages} canEdit={true} />
       </div>
 
       {/* Edit Modal */}
@@ -349,12 +367,10 @@ function InfoRow({
   value: string;
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <span style={{ color: 'var(--color-text-muted)', flexShrink: 0 }}>{icon}</span>
-      <span style={{ fontSize: 12, color: 'var(--color-text-muted)', minWidth: 70 }}>
-        {label}
-      </span>
-      <span style={{ fontSize: 14, fontWeight: 500 }}>{value}</span>
+    <div className="meta-row">
+      <span className="meta-icon">{icon}</span>
+      <span className="meta-key">{label}</span>
+      <span className="meta-value">{value}</span>
     </div>
   );
 }

@@ -6,16 +6,39 @@
 export type UserRole = 'admin' | 'strategist';
 export type OrderStatus = 'sin_estratega' | 'con_estratega' | 'entregada';
 export type StageStatus = 'pending' | 'in_progress' | 'done';
-export type ServiceType = 'diseno_grafico' | 'marketing' | 'desarrollo_web';
+/**
+ * Servicio contratado: el valor guardado en `orders.service_type`, que referencia
+ * a `services.slug`. Es texto libre porque el catálogo se amplía desde la app
+ * (ver supabase/migrations/0003_hekko_services.sql); antes era un enum.
+ */
+export type ServiceType = string;
 
-/** Etiquetas de los servicios de Hekko, para mostrar en la interfaz. */
-export const SERVICE_LABELS: Record<ServiceType, string> = {
+/**
+ * Etiquetas de los tres servicios originales, que se guardaron como slug del
+ * enum antiguo. Los servicios agregados desde la app guardan directamente su
+ * nombre visible, así que no necesitan estar aquí.
+ */
+export const SERVICE_LABELS: Record<string, string> = {
   diseno_grafico: 'Diseño gráfico',
   marketing: 'Marketing',
   desarrollo_web: 'Desarrollo web',
 };
 
-export const SERVICE_TYPES = Object.keys(SERVICE_LABELS) as ServiceType[];
+export const SERVICE_TYPES = Object.keys(SERVICE_LABELS);
+
+/** Nombre visible de un servicio a partir del valor guardado en la orden. */
+export function serviceLabel(value: ServiceType): string {
+  return SERVICE_LABELS[value] ?? value;
+}
+
+/** Fila del catálogo de servicios. */
+export interface Service {
+  slug: string;
+  label: string;
+  active: boolean;
+  position: number;
+  created_at: string;
+}
 
 /** Marca de Hekko: fila única (id = 1) de company_settings. */
 export interface CompanySettings {
@@ -163,6 +186,11 @@ export type Database = {
         Row: CompanySettings;
         Insert: Partial<CompanySettings>;
         Update: Partial<CompanySettings>;
+      };
+      services: {
+        Row: Service;
+        Insert: Partial<Service> & Pick<Service, 'slug' | 'label'>;
+        Update: Partial<Service>;
       };
       profiles: {
         Row: Profile;
